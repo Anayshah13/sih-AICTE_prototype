@@ -1,0 +1,78 @@
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph USER["User Layer"]
+        DASH[Institution<br/>Dashboard]
+        OFFICER[AICTE Officer<br/>Console]
+        CHAT[Chatbot<br/>RAG over APH]
+    end
+    subgraph ORCH["Orchestrator"]
+        ORCH_CORE[LangGraph<br/>State Machine]
+    end
+    subgraph AGENTS["6 AI Agents"]
+        DOC[Doc Verifier<br/>Gemma 27B]
+        COMP[Compliance Checker<br/>Qwen 72B]
+        EVC[EVC Video Analyst<br/>YOLO+CLIP]
+        FRAUD[Fraud Detector<br/>Gemma 27B]
+        RES[Resource Allocator<br/>Algorithm]
+        OMBUD[Ombudsperson Matcher<br/>BGE-M3]
+    end
+    subgraph TOOLS["Tool Registry (FastAPI)"]
+        KG_T[KG_Query - SPARQL]
+        OCR_T[OCR_Tool]
+        GPS_T[GPS_Verify]
+        EXT_T[External APIs<br/>Land/Fire/NIRF]
+        SENSOR_T[Sensor_Query]
+    end
+    subgraph KNOW["Knowledge Layer"]
+        KG[APH Knowledge Graph<br/>RDF/OWL + SPARQL]
+        VS[Vector Store<br/>pgvector + HNSW]
+    end
+    subgraph MODELS["Model Layer - vLLM On-Prem"]
+        QWEN[Qwen 72B]
+        GEMMA[Gemma 27B/9B]
+        YOLO[YOLOv8 + CLIP]
+        BGE[BGE-M3]
+    end
+    subgraph SENSOR["Sensor Layer (On-Demand)"]
+        SENSE[LoRaWAN mmWave<br/>People Counter]
+        TSDB[TimescaleDB]
+    end
+
+    USER --> ORCH
+    ORCH --> AGENTS
+    AGENTS --> TOOLS
+    TOOLS --> KNOW
+    TOOLS --> SENSOR
+    AGENTS --> MODELS
+
+    classDef userNode fill:#2B4C6F,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef agentNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef toolNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef knowNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef modelNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef sensorNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class DASH,OFFICER,CHAT userNode
+    class DOC,COMP,EVC,FRAUD,RES,OMBUD agentNode
+    class KG_T,OCR_T,GPS_T,EXT_T,SENSOR_T toolNode
+    class KG,VS knowNode
+    class QWEN,GEMMA,YOLO,BGE modelNode
+    class SENSE,TSDB sensorNode
+
+    style USER fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style ORCH fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style AGENTS fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style TOOLS fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style KNOW fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style MODELS fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style SENSOR fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px

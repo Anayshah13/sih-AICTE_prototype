@@ -1,0 +1,97 @@
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph USERS["Users"]
+        U1[Institution<br/>Dashboard]
+        U2[AICTE Officer<br/>Console]
+        U3[Chatbot]
+    end
+    subgraph EDGE_L["Edge"]
+        CF[CloudFront + WAF]
+        API[API Gateway + Cognito]
+    end
+    subgraph APP["Application Layer - ECS"]
+        ORCH[Orchestrator<br/>LangGraph + Outbox]
+        A1[6 AI Agents]
+        TOOLS[Tool Registry]
+        NEXT[Next.js SSR]
+    end
+    subgraph BUS["Event Bus"]
+        KAFKA[Kafka - MSK<br/>6 topics, Avro]
+    end
+    subgraph CLOUD_DATA["Cloud Data - Mumbai"]
+        S3[S3 Documents]
+        PGV[pgvector]
+        REDIS[Redis Cache]
+        ES[Elasticsearch]
+        RDS[RDS PostgreSQL<br/>non-PII]
+    end
+    subgraph ONPREM_DATA["On-Prem - AICTE Delhi"]
+        PII[PostgreSQL<br/>PII encrypted]
+        VLLM[vLLM 4× A100<br/>Qwen + Gemma + BGE]
+        JENA[Jena Fuseki<br/>APH KG]
+        TSDB[TimescaleDB<br/>sensor]
+    end
+    subgraph SENSOR_L["Sensor On-Demand"]
+        SENSE[LoRaWAN mmWave<br/>people counter]
+    end
+    subgraph DR["Disaster Recovery"]
+        DELHI[AWS Delhi<br/>hot standby]
+    end
+
+    U1 --> CF
+    U2 --> CF
+    U3 --> CF
+    CF --> API
+    API --> NEXT
+    API --> ORCH
+    ORCH --> A1
+    A1 --> TOOLS
+    ORCH --> KAFKA
+    A1 --> KAFKA
+    KAFKA --> ES
+    A1 -.->|API| VLLM
+    A1 -.->|SPARQL| JENA
+    A1 -.->|queries| PII
+    A1 -.->|queries| TSDB
+    A1 --> S3
+    A1 --> PGV
+    A1 --> REDIS
+    SENSE -.->|on-demand| TSDB
+    CLOUD_DATA -.->|replication| DELHI
+
+    classDef userNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef edgeNode fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef appNode fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef busNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef cloudNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
+    classDef onpremNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef sensorNode fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:1.5px
+    classDef drNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class U1,U2,U3 userNode
+    class CF,API edgeNode
+    class ORCH,A1,TOOLS,NEXT appNode
+    class KAFKA busNode
+    class S3,PGV,REDIS,ES,RDS cloudNode
+    class PII,VLLM,JENA,TSDB onpremNode
+    class SENSE sensorNode
+    class DELHI drNode
+
+    style USERS fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style EDGE_L fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style APP fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style BUS fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style CLOUD_DATA fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:2px
+    style ONPREM_DATA fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style SENSOR_L fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:2px
+    style DR fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px

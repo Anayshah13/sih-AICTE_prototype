@@ -1,0 +1,49 @@
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'actorBkg': '#233043',
+  'actorTextColor': '#FFFFFF',
+  'actorBorder': '#7FA3C0',
+  'actorLineColor': '#7FA3C0',
+  'signalColor': '#E0E6EB',
+  'signalTextColor': '#FFFFFF',
+  'labelBoxBkgColor': '#1B6B7A',
+  'labelBoxBorderColor': '#0D3A42',
+  'labelTextColor': '#FFFFFF',
+  'loopTextColor': '#FFFFFF',
+  'noteBkgColor': '#3A2030',
+  'noteTextColor': '#FFFFFF',
+  'noteBorderColor': '#8A5468',
+  'activationBkgColor': '#162235',
+  'activationBorderColor': '#4A5D6E',
+  'sequenceNumberColor': '#0F1A26',
+  'fontSize': '15px'
+}}}%%
+sequenceDiagram
+    autonumber
+    actor U as User/Agent
+    participant LLM as Local LLM<br/>(Qwen/Gemma)
+    participant TR as Tool Registry
+    participant KG as Knowledge Graph
+    participant DB as Database/API
+
+    U->>LLM: Query + tool descriptions
+    LLM->>LLM: Decides which tool to call
+    LLM->>TR: function_call(tool_name, params)
+
+    alt KG tool
+        TR->>KG: SPARQL query
+        KG-->>TR: Structured result
+    else External API tool
+        TR->>DB: API call
+        DB-->>TR: Structured result
+    end
+
+    TR-->>LLM: Pydantic-validated result
+    LLM->>LLM: Formats response with citations
+    LLM-->>U: Structured response
+
+    Note over U,DB: LLM never produces facts from training data<br/>Tools are the source of truth

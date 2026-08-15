@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AICTE Architecture Diagrams</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      securityLevel: "loose",
+      flowchart: { htmlLabels: true, curve: "basis" },
+    });
+  </script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --text: #e8eef4;
+      --muted: #9aa8b6;
+      --accent: #4fa8bd;
+      --border: #2a3a4e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #0f1a26;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+    h1 { margin: 0 0 12px; font-size: 1.25rem; font-weight: 600; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+    nav a:hover { color: var(--text); border-color: var(--accent); }
+    main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 28px;
+      overflow-x: auto;
+    }
+    h2 {
+      margin: 0 0 16px;
+      font-size: 1.05rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .mermaid { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AICTE Architecture Diagrams</h1>
+    <nav>
+      <a href="#raw">Raw</a>
+      <a href="#ai-architecture">AI Architecture</a>
+      <a href="#combined">Combined View</a>
+      <a href="#langgraph">LangGraph State Machine</a>
+      <a href="#system">System Architecture</a>
+      <a href="#tool-call">Tool Call Flow</a>
+    </nav>
+  </header>
+  <main>
+    <section id="raw">
+      <h2>Raw</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph USERS["Users"]
+        U1[Institution<br/>Dashboard]
+        U2[AICTE Officer<br/>Console]
+        U3[Chatbot]
+    end
+    subgraph APP["Application Layer"]
+        ORCH[Orchestrator<br/>LangGraph + Outbox]
+        A1[6 AI Agents]
+        TOOLS[Tool Registry]
+        NEXT[Web Frontend]
+    end
+    subgraph BUS["Event Bus"]
+        KAFKA[Kafka<br/>6 topics, Avro]
+    end
+    subgraph CLOUD_DATA["Cloud Data"]
+        S3[Document Store]
+        PGV[Vector Store]
+        REDIS[Cache]
+        ES[Search Index]
+        RDS[Relational DB<br/>non-PII]
+    end
+    subgraph ONPREM_DATA["On-Prem"]
+        PII[PII Database<br/>encrypted]
+        VLLM[LLM Serving<br/>Qwen + Gemma + BGE]
+        JENA[Knowledge Graph<br/>Jena Fuseki]
+        TSDB[Sensor DB<br/>TimescaleDB]
+    end
+    subgraph SENSOR_L["Sensor Layer - On-Demand"]
+        SENSE[LoRaWAN mmWave<br/>People Counter]
+    end
+
+    U1 --> ORCH
+    U2 --> ORCH
+    U3 --> ORCH
+    ORCH --> NEXT
+    ORCH --> A1
+    A1 --> TOOLS
+    ORCH --> KAFKA
+    A1 --> KAFKA
+    KAFKA --> ES
+    A1 -.->|API| VLLM
+    A1 -.->|SPARQL| JENA
+    A1 -.->|queries| PII
+    A1 -.->|queries| TSDB
+    A1 --> S3
+    A1 --> PGV
+    A1 --> REDIS
+    SENSE -.->|on-demand| TSDB
+
+    classDef userNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef appNode fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef busNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef cloudNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
+    classDef onpremNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef sensorNode fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:1.5px
+
+    class U1,U2,U3 userNode
+    class ORCH,A1,TOOLS,NEXT appNode
+    class KAFKA busNode
+    class S3,PGV,REDIS,ES,RDS cloudNode
+    class PII,VLLM,JENA,TSDB onpremNode
+    class SENSE sensorNode
+
+    style USERS fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style APP fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style BUS fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style CLOUD_DATA fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:2px
+    style ONPREM_DATA fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style SENSOR_L fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:2px
+      </pre>
+    </section>
+
+    <section id="ai-architecture">
+      <h2>AI Architecture Flow</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph USER["User Layer"]
+        DASH[Institution<br/>Dashboard]
+        OFFICER[AICTE Officer<br/>Console]
+        CHAT[Chatbot<br/>RAG over APH]
+    end
+    subgraph ORCH["Orchestrator"]
+        ORCH_CORE[LangGraph<br/>State Machine]
+    end
+    subgraph AGENTS["6 AI Agents"]
+        DOC[Doc Verifier<br/>Gemma 27B]
+        COMP[Compliance Checker<br/>Qwen 72B]
+        EVC[EVC Video Analyst<br/>YOLO+CLIP]
+        FRAUD[Fraud Detector<br/>Gemma 27B]
+        RES[Resource Allocator<br/>Algorithm]
+        OMBUD[Ombudsperson Matcher<br/>BGE-M3]
+    end
+    subgraph TOOLS["Tool Registry (FastAPI)"]
+        KG_T[KG_Query - SPARQL]
+        OCR_T[OCR_Tool]
+        GPS_T[GPS_Verify]
+        EXT_T[External APIs<br/>Land/Fire/NIRF]
+        SENSOR_T[Sensor_Query]
+    end
+    subgraph KNOW["Knowledge Layer"]
+        KG[APH Knowledge Graph<br/>RDF/OWL + SPARQL]
+        VS[Vector Store<br/>pgvector + HNSW]
+    end
+    subgraph MODELS["Model Layer - vLLM On-Prem"]
+        QWEN[Qwen 72B]
+        GEMMA[Gemma 27B/9B]
+        YOLO[YOLOv8 + CLIP]
+        BGE[BGE-M3]
+    end
+    subgraph SENSOR["Sensor Layer (On-Demand)"]
+        SENSE[LoRaWAN mmWave<br/>People Counter]
+        TSDB[TimescaleDB]
+    end
+
+    USER --> ORCH
+    ORCH --> AGENTS
+    AGENTS --> TOOLS
+    TOOLS --> KNOW
+    TOOLS --> SENSOR
+    AGENTS --> MODELS
+
+    classDef userNode fill:#2B4C6F,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef agentNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef toolNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef knowNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef modelNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef sensorNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class DASH,OFFICER,CHAT userNode
+    class DOC,COMP,EVC,FRAUD,RES,OMBUD agentNode
+    class KG_T,OCR_T,GPS_T,EXT_T,SENSOR_T toolNode
+    class KG,VS knowNode
+    class QWEN,GEMMA,YOLO,BGE modelNode
+    class SENSE,TSDB sensorNode
+
+    style USER fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style ORCH fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style AGENTS fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style TOOLS fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style KNOW fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style MODELS fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style SENSOR fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px
+      </pre>
+    </section>
+
+    <section id="combined">
+      <h2>Combined View</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph USERS["Users"]
+        U1[Institution<br/>Dashboard]
+        U2[AICTE Officer<br/>Console]
+        U3[Chatbot]
+    end
+    subgraph EDGE_L["Edge"]
+        CF[CloudFront + WAF]
+        API[API Gateway + Cognito]
+    end
+    subgraph APP["Application Layer - ECS"]
+        ORCH[Orchestrator<br/>LangGraph + Outbox]
+        A1[6 AI Agents]
+        TOOLS[Tool Registry]
+        NEXT[Next.js SSR]
+    end
+    subgraph BUS["Event Bus"]
+        KAFKA[Kafka - MSK<br/>6 topics, Avro]
+    end
+    subgraph CLOUD_DATA["Cloud Data - Mumbai"]
+        S3[S3 Documents]
+        PGV[pgvector]
+        REDIS[Redis Cache]
+        ES[Elasticsearch]
+        RDS[RDS PostgreSQL<br/>non-PII]
+    end
+    subgraph ONPREM_DATA["On-Prem - AICTE Delhi"]
+        PII[PostgreSQL<br/>PII encrypted]
+        VLLM[vLLM 4× A100<br/>Qwen + Gemma + BGE]
+        JENA[Jena Fuseki<br/>APH KG]
+        TSDB[TimescaleDB<br/>sensor]
+    end
+    subgraph SENSOR_L["Sensor On-Demand"]
+        SENSE[LoRaWAN mmWave<br/>people counter]
+    end
+    subgraph DR["Disaster Recovery"]
+        DELHI[AWS Delhi<br/>hot standby]
+    end
+
+    U1 --> CF
+    U2 --> CF
+    U3 --> CF
+    CF --> API
+    API --> NEXT
+    API --> ORCH
+    ORCH --> A1
+    A1 --> TOOLS
+    ORCH --> KAFKA
+    A1 --> KAFKA
+    KAFKA --> ES
+    A1 -.->|API| VLLM
+    A1 -.->|SPARQL| JENA
+    A1 -.->|queries| PII
+    A1 -.->|queries| TSDB
+    A1 --> S3
+    A1 --> PGV
+    A1 --> REDIS
+    SENSE -.->|on-demand| TSDB
+    CLOUD_DATA -.->|replication| DELHI
+
+    classDef userNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef edgeNode fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef appNode fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef busNode fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef cloudNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
+    classDef onpremNode fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:1.5px
+    classDef sensorNode fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:1.5px
+    classDef drNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class U1,U2,U3 userNode
+    class CF,API edgeNode
+    class ORCH,A1,TOOLS,NEXT appNode
+    class KAFKA busNode
+    class S3,PGV,REDIS,ES,RDS cloudNode
+    class PII,VLLM,JENA,TSDB onpremNode
+    class SENSE sensorNode
+    class DELHI drNode
+
+    style USERS fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style EDGE_L fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style APP fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style BUS fill:#2E3B4E,color:#FFFFFF,stroke:#7FA3C0,stroke-width:2px
+    style CLOUD_DATA fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:2px
+    style ONPREM_DATA fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style SENSOR_L fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:2px
+    style DR fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px
+      </pre>
+    </section>
+
+    <section id="langgraph">
+      <h2>LangGraph State Machine</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+stateDiagram-v2
+    direction LR
+    [*] --> ApplicationSubmitted
+    ApplicationSubmitted --> DocumentVerifier
+    DocumentVerifier --> DeficiencyNotice : verification fails
+    DocumentVerifier --> ComplianceChecker : success
+    ComplianceChecker --> DeficiencyList : non-compliant
+    ComplianceChecker --> FraudDetector : compliant or fixable
+    FraudDetector --> ManualReview : high risk
+    FraudDetector --> SensorDeploy : needs dimension tracking
+    FraudDetector --> EVCVideoAnalyst : low risk
+    SensorDeploy --> EVCVideoAnalyst : 30-day data collected
+    EVCVideoAnalyst --> PhysicalEVC : anomalies detected
+    EVCVideoAnalyst --> ResourceAllocator : clean or verified
+    ResourceAllocator --> FinalRecommendation : evaluators assigned
+    FinalRecommendation --> HumanOfficerReview
+    HumanOfficerReview --> OverrideLogged : officer overrides
+    HumanOfficerReview --> DecisionAnchored : officer accepts
+    OverrideLogged --> EventEmitted
+    DecisionAnchored --> EventEmitted
+    EventEmitted --> [*]
+    DeficiencyNotice --> [*]
+    DeficiencyList --> [*]
+    ManualReview --> [*]
+    PhysicalEVC --> [*]
+
+    classDef terminal fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+    classDef review fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef normal fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+
+    class DeficiencyNotice,DeficiencyList,ManualReview,PhysicalEVC terminal
+    class HumanOfficerReview,FinalRecommendation review
+    class ApplicationSubmitted,DocumentVerifier,ComplianceChecker,FraudDetector,SensorDeploy,EVCVideoAnalyst,ResourceAllocator,OverrideLogged,DecisionAnchored,EventEmitted normal
+      </pre>
+    </section>
+
+    <section id="system">
+      <h2>Overall System Architecture</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'clusterBkg': '#0F1A26',
+  'clusterBorder': '#4A5D6E',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+graph LR
+    subgraph EDGE["Edge"]
+        USER[Users<br/>Institution + Officer]
+        CF[CloudFront<br/>+ WAF]
+    end
+    subgraph AWS_MUMBAI["AWS Mumbai - Primary"]
+        API[API Gateway<br/>+ Cognito]
+        NEXT[Next.js SSR<br/>ECS Fargate]
+        ORCH[Orchestrator<br/>FastAPI ECS]
+        AGENTS[6 Agent Services<br/>ECS Fargate]
+        KAFKA[Kafka - MSK<br/>6 topics]
+        S3[S3 Documents]
+        PGV[pgvector]
+        REDIS[Redis Cache]
+        ES[Elasticsearch<br/>Dashboard]
+        RDS[RDS PostgreSQL<br/>non-PII]
+        READ[Read Model Builder]
+        NOTIFY[Notification Svc]
+    end
+    subgraph ONPREM["On-Prem - AICTE Delhi"]
+        PG_PII[PostgreSQL<br/>PII encrypted]
+        VLLM[vLLM 4× A100<br/>Qwen + Gemma + BGE]
+        JENA[Jena Fuseki<br/>APH KG]
+        TSDB[TimescaleDB<br/>Sensor]
+    end
+    subgraph AWS_DELHI["AWS Delhi - DR"]
+        DR[Hot Standby]
+    end
+
+    USER --> CF
+    CF --> API
+    API --> NEXT
+    API --> ORCH
+    ORCH --> AGENTS
+    AGENTS --> KAFKA
+    KAFKA --> READ
+    READ --> ES
+    KAFKA --> NOTIFY
+    AGENTS -.->|internal API| VLLM
+    AGENTS -.->|SPARQL| JENA
+    AGENTS -.->|queries| PG_PII
+    AGENTS -.->|queries| TSDB
+    AGENTS --> S3
+    AGENTS --> PGV
+    AGENTS --> REDIS
+    ONPREM -.->|Direct Connect| AWS_MUMBAI
+    AWS_MUMBAI -.->|Replication| AWS_DELHI
+
+    classDef edgeNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef mumbaiNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
+    classDef onpremNode fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+    classDef drNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class USER,CF edgeNode
+    class API,NEXT,ORCH,AGENTS,KAFKA,S3,PGV,REDIS,ES,RDS,READ,NOTIFY mumbaiNode
+    class PG_PII,VLLM,JENA,TSDB onpremNode
+    class DR drNode
+
+    style EDGE fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style AWS_MUMBAI fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style ONPREM fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
+    style AWS_DELHI fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px
+      </pre>
+    </section>
+
+    <section id="tool-call">
+      <h2>Tool Call Flow</h2>
+      <pre class="mermaid">
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'actorBkg': '#233043',
+  'actorTextColor': '#FFFFFF',
+  'actorBorder': '#7FA3C0',
+  'actorLineColor': '#7FA3C0',
+  'signalColor': '#E0E6EB',
+  'signalTextColor': '#FFFFFF',
+  'labelBoxBkgColor': '#1B6B7A',
+  'labelBoxBorderColor': '#0D3A42',
+  'labelTextColor': '#FFFFFF',
+  'loopTextColor': '#FFFFFF',
+  'noteBkgColor': '#3A2030',
+  'noteTextColor': '#FFFFFF',
+  'noteBorderColor': '#8A5468',
+  'activationBkgColor': '#162235',
+  'activationBorderColor': '#4A5D6E',
+  'sequenceNumberColor': '#0F1A26',
+  'fontSize': '15px'
+}}}%%
+sequenceDiagram
+    autonumber
+    actor U as User/Agent
+    participant LLM as Local LLM<br/>(Qwen/Gemma)
+    participant TR as Tool Registry
+    participant KG as Knowledge Graph
+    participant DB as Database/API
+
+    U->>LLM: Query + tool descriptions
+    LLM->>LLM: Decides which tool to call
+    LLM->>TR: function_call(tool_name, params)
+
+    alt KG tool
+        TR->>KG: SPARQL query
+        KG-->>TR: Structured result
+    else External API tool
+        TR->>DB: API call
+        DB-->>TR: Structured result
+    end
+
+    TR-->>LLM: Pydantic-validated result
+    LLM->>LLM: Formats response with citations
+    LLM-->>U: Structured response
+
+    Note over U,DB: LLM never produces facts from training data<br/>Tools are the source of truth
+      </pre>
+    </section>
+  </main>
+</body>
+</html>

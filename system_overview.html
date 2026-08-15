@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Overview — AI-Supported AICTE Approval Portal</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      securityLevel: "loose",
+      themeVariables: {
+        primaryColor: "#1e293b",
+        primaryTextColor: "#e6edf3",
+        primaryBorderColor: "#334155",
+        lineColor: "#94a3b8",
+        textColor: "#e6edf3",
+        fontSize: "14px",
+        clusterBkg: "#0f172a",
+        clusterBorder: "#334155",
+        edgeLabelBackground: "#0f172a",
+      },
+      flowchart: { htmlLabels: true, curve: "basis" },
+    });
+  </script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --panel-2: #111c30;
+      --text: #e6edf3;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --accent: #7dd3fc;
+      --accent-2: #38bdf8;
+      --good: #86efac;
+      --warn: #fcd34d;
+      --bad: #fca5a5;
+      --border: #1f2a3d;
+      --border-strong: #334155;
+      --code-bg: #0a1424;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-2); }
+    code {
+      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #a5f3fc;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+    pre code { background: none; border: none; padding: 0; color: inherit; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      padding: 24px 20px;
+    }
+    aside .brand {
+      font-size: 12px;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    aside .title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 20px;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    aside nav { display: flex; flex-direction: column; gap: 2px; }
+    aside nav a {
+      color: var(--muted);
+      font-size: 13.5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    aside nav a:hover {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+    aside nav .group {
+      color: var(--dim);
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 10px 6px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 56px 48px 120px;
+    }
+    header.doc-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 40px;
+    }
+    header.doc-header .kicker {
+      font-size: 12px;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    header.doc-header h1 {
+      margin: 0 0 12px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    header.doc-header p {
+      color: var(--muted);
+      margin: 0 0 12px;
+      font-size: 15.5px;
+    }
+    header.doc-header .meta {
+      margin-top: 20px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      color: var(--dim);
+    }
+    header.doc-header .meta span strong { color: var(--muted); font-weight: 500; }
+
+    section {
+      margin-bottom: 56px;
+      scroll-margin-top: 20px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      margin: 0 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 28px 0 10px;
+      color: var(--text);
+    }
+    h4 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 20px 0 8px;
+    }
+    p { margin: 0 0 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 22px; margin: 0 0 12px; }
+    li { margin-bottom: 6px; }
+    li::marker { color: var(--dim); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13.5px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom-color: var(--border-strong);
+    }
+    tbody tr:hover { background: var(--panel-2); }
+    table.compact th, table.compact td { padding: 8px 10px; font-size: 12.5px; }
+
+    .callout {
+      border: 1px solid var(--border-strong);
+      border-left-width: 3px;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+      background: var(--panel);
+      font-size: 14px;
+    }
+    .callout.principle { border-left-color: var(--accent-2); }
+    .callout.warn { border-left-color: var(--warn); }
+    .callout.bad { border-left-color: var(--bad); }
+    .callout.good { border-left-color: var(--good); }
+    .callout .label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .callout.principle .label { color: var(--accent-2); }
+    .callout.warn .label { color: var(--warn); }
+    .callout.bad .label { color: var(--bad); }
+    .callout.good .label { color: var(--good); }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      main { padding: 32px 20px 80px; }
+    }
+
+    .diagram {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    .diagram .mermaid { display: flex; justify-content: center; }
+    .caption {
+      font-size: 12.5px;
+      color: var(--dim);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    .clause {
+      display: inline-block;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-strong);
+      color: var(--muted);
+      margin-left: 6px;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      vertical-align: middle;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .tag.warn { border-color: rgba(252, 211, 77, 0.4); color: var(--warn); }
+    .tag.good { border-color: rgba(134, 239, 172, 0.4); color: var(--good); }
+    .tag.bad { border-color: rgba(252, 165, 165, 0.4); color: var(--bad); }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 8px 20px;
+      font-size: 14px;
+    }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">DJSCE SIH 2026</div>
+      <div class="title">AI-Supported AICTE Approval Portal</div>
+      <nav>
+        <div class="group">Foundations</div>
+        <a href="#overview">1. Overview</a>
+        <a href="#problem">2. Problem &amp; scope</a>
+        <a href="#principles">3. Design principles</a>
+        <a href="#non-goals">4. Non-goals</a>
+
+        <div class="group">Domain</div>
+        <a href="#actors">5. Actors &amp; committees</a>
+        <a href="#app-types">6. Application types</a>
+        <a href="#workflow">7. Approval workflow</a>
+        <a href="#norms">8. APH norms in scope</a>
+
+        <div class="group">System</div>
+        <a href="#architecture">9. Architecture</a>
+        <a href="#data-model">10. Data model</a>
+        <a href="#tech-stack">11. Tech stack</a>
+
+        <div class="group">AI surface</div>
+        <a href="#rules-engine">12. APH rules engine</a>
+        <a href="#tools">13. Tool registry</a>
+        <a href="#llm-usage">14. LLM usage</a>
+        <a href="#cv-pipeline">15. EVC video &amp; infra CV</a>
+        <a href="#assignment">16. Committee assignment</a>
+
+        <div class="group">Governance</div>
+        <a href="#security">17. Security, PII, DSC</a>
+        <a href="#audit">18. Audit &amp; appeal</a>
+        <a href="#delivery">19. Delivery plan</a>
+      </nav>
+    </aside>
+
+    <main>
+      <header class="doc-header">
+        <div class="kicker">DJS_26_SW_06 · System Overview · v0.2 · APH-grounded</div>
+        <h1>AI-Supported AICTE Approval Portal</h1>
+        <p>
+          A web application that walks an institution through an AICTE approval
+          exactly as the <strong>Approval Process Handbook 2024–27</strong>
+          prescribes it: online application via the AICTE portal, deterministic
+          norm checks, routed through the correct combination of Scrutiny,
+          Expert Visit, Hearing, and Appellate committees, ending at the
+          Executive Committee’s signed decision.
+        </p>
+        <p>
+          The AI does three things: it turns documents into structured data,
+          it explains what the deterministic rules already decided, and it
+          drafts speaking orders. It never decides.
+        </p>
+        <div class="meta">
+          <span><strong>Problem:</strong> DJSCE SIH 2026 · DJS_26_SW_06</span>
+          <span><strong>Source of truth:</strong> APH 2024–27</span>
+          <span><strong>Scope:</strong> hackathon prototype</span>
+        </div>
+      </header>
+
+      <section id="overview">
+        <h2>1. Overview</h2>
+        <p>
+          Existing AICTE approvals are burdened by paper-heavy submissions,
+          repeated deficiency cycles, sequential committee routing, and slow
+          communication back to the institution. The portal already exists at
+          <code>aicte-india.org</code>; this project is the AI layer over it, not
+          a replacement.
+        </p>
+        <p>
+          Concretely: one FastAPI backend, one Next.js frontend, one Postgres
+          database (with <code>pgvector</code>), one object store for PDFs and
+          EVC videos, and four small AI microservices for OCR, computer vision,
+          embeddings, and an LLM. Every claim the LLM makes must trace to a
+          rules-engine result or an APH-handbook chunk.
+        </p>
+      </section>
+
+      <section id="problem">
+        <h2>2. Problem &amp; scope</h2>
+        <p>
+          The six problem-statement capabilities map to concrete APH clauses.
+          The table names the clause we ground each capability in — nothing on
+          this list is invented.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 30%">Problem-statement item</th>
+              <th style="width: 42%">Where it lives in the system</th>
+              <th>APH anchor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Application processing &amp; workflow automation</td>
+              <td>Type-routed state machine driven by <em>Table 2.3</em> of the APH</td>
+              <td>Ch. I §1.8–1.11, Ch. II §2.23, Table 2.3</td>
+            </tr>
+            <tr>
+              <td>Document verification</td>
+              <td>OCR + LLM structured extraction, DSC verification, deficiency generation from norm checks</td>
+              <td>Annexure-1, Annexure-2, §2.3.3, §2.3.4</td>
+            </tr>
+            <tr>
+              <td>Evaluator matching</td>
+              <td>Improved “web-portal based automated selection” for SC/EVC/SHC/SAC using complexity × reliability + conflict-of-interest + load balancing</td>
+              <td>§1.8a, §1.9a</td>
+            </tr>
+            <tr>
+              <td>Real-time tracking &amp; communication</td>
+              <td>Institution dashboard shows deficiency reports, committee schedules, hearings, appeal windows; SSE updates on state transitions</td>
+              <td>§1.4.1d, §2.3.1a, §2.4, §1.10c</td>
+            </tr>
+            <tr>
+              <td>Analytics &amp; reporting</td>
+              <td>Postgres views over <code>compliance_checks</code>, throughput per committee, deficiency category frequency</td>
+              <td>§7.13 (complaint status reporting)</td>
+            </tr>
+            <tr>
+              <td>Digital dimension tracking of infrastructure</td>
+              <td>Automated review of the 30-minute EVC video and infrastructure photos: room-type detection, equipment counts, GPS-coord cross-check against the approved Building Plan</td>
+              <td>§1.9f, §1.9g, Annexure-3, Annexure-4</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="principles">
+        <h2>3. Design principles</h2>
+
+        <div class="callout principle">
+          <div class="label">Principle 1 — The APH is the source of truth</div>
+          Every rule the system enforces comes from a specific clause of the
+          Approval Process Handbook 2024–27. The rule table is versioned by
+          <code>effective_from</code> so an application submitted under APH
+          2024–25 is judged against 2024–25, even if 2025–26 is live.
+        </div>
+
+        <div class="callout principle">
+          <div class="label">Principle 2 — Rules decide compliance, LLMs explain it</div>
+          Faculty ratios, built-up area, library titles, TER charges, security
+          deposits, and eligibility windows are pure Python functions with
+          unit tests. The LLM turns those results into deficiency briefs,
+          speaking orders, and chatbot answers. It never computes the number.
+        </div>
+
+        <div class="callout principle">
+          <div class="label">Principle 3 — The Executive Committee signs</div>
+          §1.10a and §2.25 name the Executive Committee (ratified by the
+          Council) as the only body that can grant or reject approval. The
+          system produces a decision brief for the EC and logs every override,
+          matching the statutory shape of the AICTE Act, 1987.
+        </div>
+
+        <div class="callout principle">
+          <div class="label">Principle 4 — PII never reaches the LLM in raw form</div>
+          Aadhaar and PAN seeding is mandated for faculty by §6.14i. Salaries
+          are cross-checked via Electronic Clearing Service statements per
+          §6.14a. All of these are masked before any LLM call; the model sees
+          only hashes and buckets.
+        </div>
+
+        <div class="callout principle">
+          <div class="label">Principle 5 — Digital Signatures are enforced</div>
+          §1.4.3 and Annexure-2 make DSC mandatory: “Institutions shall NOT be
+          permitted to submit applications without DSC.” The system verifies
+          every uploaded document’s signature at ingest and rejects unsigned
+          submissions before they enter the workflow.
+        </div>
+      </section>
+
+      <section id="non-goals">
+        <h2>4. Non-goals (explicit)</h2>
+        <p>
+          These are drawn from earlier drafts of this project. They are out of
+          scope for the prototype, and most are out of scope for a hackathon at
+          all.
+        </p>
+        <table>
+          <thead>
+            <tr><th style="width: 42%">Out of scope</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Blockchain / Polygon anchoring of decisions</td>
+              <td>An append-only Postgres audit log with hash chaining satisfies tamper-evidence without a foreign chain, and does not conflict with §7.13 reporting requirements.</td>
+            </tr>
+            <tr>
+              <td>SPARQL / RDF / OWL knowledge graph over the APH</td>
+              <td>APH norms are arithmetic and conditional rules (§6.14 faculty ratio, §6.12 auto-reduction, §2.6l Working Professional supernumerary). A rules engine in Python is faster to write, faster to test, and actually executes the math.</td>
+            </tr>
+            <tr>
+              <td>Kafka / MSK / event bus</td>
+              <td>One backend service. Postgres <code>LISTEN/NOTIFY</code> handles dashboard fan-out.</td>
+            </tr>
+            <tr>
+              <td>LoRaWAN mmWave people counters / IoT sensor deployment</td>
+              <td>Occupancy does not verify Approved Intake, built-up area, or faculty count. §7.4g uses “excess admission over Approved Intake” — a data check, not a sensor check.</td>
+            </tr>
+            <tr>
+              <td>Multi-region hot standby / “AWS Delhi”</td>
+              <td>Not required for a prototype. AWS India regions are Mumbai and Hyderabad, not Delhi.</td>
+            </tr>
+            <tr>
+              <td>Multi-model consensus, adversarial debate agents, “AI writes next year’s APH”</td>
+              <td>Increases surface area and inference cost without changing decision quality for scoped rules.</td>
+            </tr>
+            <tr>
+              <td>Cross-regulator API mesh (UGC, NBA, NAAC, State, University)</td>
+              <td>Requires policy MoUs. Model as mock adapters with the correct interface — do not claim live integration.</td>
+            </tr>
+            <tr>
+              <td>Voice chatbot in 22 languages, ERP webhooks, continuous compliance</td>
+              <td>Each is a full product. Postpone until v1 of the approval flow is stable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="actors">
+        <h2>5. Actors &amp; AICTE committees</h2>
+        <p>
+          The APH does not describe a single “officer.” It describes a routed
+          committee process. The system’s role model reflects that.
+        </p>
+        <table class="compact">
+          <thead>
+            <tr>
+              <th style="width: 20%">Actor / Committee</th>
+              <th>What they do</th>
+              <th style="width: 18%">APH ref.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Institution</strong></td>
+              <td>Registers via NSWS, pays TER, uploads DSC-signed documents, edits until final submission, fixes deficiencies, files appeal within 7 days.</td>
+              <td>§1.4, §2.3, §1.11</td>
+            </tr>
+            <tr>
+              <td><strong>Regulation Bureau</strong></td>
+              <td>AICTE’s intake and coordination bureau. Schedules SC/EVC dates, publishes SC and EVC reports on the portal.</td>
+              <td>§1.8b, §1.9h</td>
+            </tr>
+            <tr>
+              <td><strong>Scrutiny Committee (SC) / Re-Scrutiny</strong></td>
+              <td>Verifies uploaded documents against Annexure-1 (new) or Annexure-2 (existing). Re-SC verifies only the deficiencies pointed out by SC.</td>
+              <td>§1.8, §2.23.1</td>
+            </tr>
+            <tr>
+              <td><strong>Expert Visit Committee (EVC)</strong></td>
+              <td>Verifies infrastructural facilities online (via a 30-min video + document links) or physically. Checks readiness against Annexure-3 &amp; 4.</td>
+              <td>§1.9, §2.23.2</td>
+            </tr>
+            <tr>
+              <td><strong>Standing Hearing Committee (SHC)</strong></td>
+              <td>Reviews SC/EVC reports and the institution’s compliance response before recommendation goes to EC.</td>
+              <td>§2.23.3, §7.10d</td>
+            </tr>
+            <tr>
+              <td><strong>Standing Appellate Committee (SAC)</strong></td>
+              <td>Hears appeals against EC decisions within 7 days of LoD/LoR. May recommend fresh SC/EVC.</td>
+              <td>§1.11, §2.24</td>
+            </tr>
+            <tr>
+              <td><strong>Executive Committee (EC)</strong></td>
+              <td>Decides. Issues LoA, LoD, or LoR with Speaking Order. Decisions are ratified by the Council.</td>
+              <td>§1.10, §2.25</td>
+            </tr>
+            <tr>
+              <td><strong>Standing Complaint Scrutiny Committee (SCSC)</strong></td>
+              <td>Reviews verified complaints; can recommend Warning, Show-Cause Notice, or EVC.</td>
+              <td>§7.10c</td>
+            </tr>
+            <tr>
+              <td><strong>PGRC — Public Grievance Redressal Cell</strong></td>
+              <td>Intake for complaints. Forwards verified complaints to SCSC.</td>
+              <td>§7.10b</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Both SC and EVC members are already picked via a “web-portal based
+          automated selection process” (§1.8a, §1.9a). Our assignment layer
+          improves the quality of that selection — it does not replace the
+          statutory role of the committee.
+        </p>
+      </section>
+
+      <section id="app-types">
+        <h2>6. Application types &amp; routing</h2>
+        <p>
+          Chapter II lists <strong>17 application types</strong> for existing
+          institutions alone, plus Chapter I (New Institution), Chapter III
+          (Collaboration &amp; Twinning), Chapter IV (Universities), and
+          Chapter V (ODL/OL). Each type has a specific combination of
+          committees per APH <em>Table 2.3</em>. The router is a lookup on
+          <code>(chapter, application_type)</code> that returns the required
+          stages.
+        </p>
+
+        <table class="compact">
+          <thead>
+            <tr>
+              <th>Application type (Ch. II subset)</th>
+              <th>Self-Disc.</th>
+              <th>SC / Re-SC</th>
+              <th>EVC</th>
+              <th>SHC / SAC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>EoA based on Self-Disclosure</td><td>Yes</td><td>–</td><td>–</td><td>–</td></tr>
+            <tr><td>Introduction / Continuation of NRI seats</td><td>Yes</td><td>–</td><td>–</td><td>–</td></tr>
+            <tr><td>Increase in Intake / Additional Course(s)</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Start new Programme / Level</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Merger of Institutions (same / different Trust)</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Conversion Diploma ↔ Degree</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Introduction of Integrated / Dual Degree</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Introduction / Continuation of FPM</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Break in EoA / Restoration / Hibernation</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Change of Site / Location</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+            <tr><td>Change in Name of Institution / University / Type</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>Change in Name / Address of Trust / Society / Company</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>Change in Name of Course / Merger / Reduction</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>Closure of Programme / Course / Institution</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>Change in Bank Details</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>FN / OCI / Gulf-Children supernumerary</td><td>–</td><td>Yes</td><td>–</td><td>–</td></tr>
+            <tr><td>Off-Campus (10-yr institution, NIRF/QS/NBA/NAAC/autonomy/80%-adm.)</td><td>–</td><td>Yes</td><td>Yes</td><td>as applicable</td></tr>
+          </tbody>
+        </table>
+        <p class="caption">
+          Faithful summary of APH 2024–27 Table 2.3. “as applicable” means SHC
+          or SAC engage only if the previous step raised deficiencies or the
+          institution appeals.
+        </p>
+
+        <div class="callout warn">
+          <div class="label">Extended EoA — a routing branch</div>
+          §2.1a and §5.2 allow 3-year <em>Extended EoA</em> for institutions
+          meeting any one of six criteria (NIRF, QS Asia, ≥30% NBA-accredited
+          courses, NAAC ≥3.01, UGC autonomy, ≥80% admission for 5 years). The
+          router checks these deterministically before routing to
+          <code>ExtendedEoA</code>, which processes year-round rather than in
+          the Public Notice window.
+        </div>
+      </section>
+
+      <section id="workflow">
+        <h2>7. Approval workflow</h2>
+        <p>
+          The workflow is an explicit state machine persisted in
+          <code>applications.state</code>. Every transition writes a row to
+          <code>audit_log</code>. Deficiency loops are real states, not
+          terminals. The appeal path is a first-class branch.
+        </p>
+        <div class="diagram">
+          <pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> DraftApplication
+    DraftApplication --> TerCharged : payment via portal
+    TerCharged --> DscValidated : DSC verification on all docs
+    DscValidated --> DraftApplication : DSC invalid / doc missing
+    DscValidated --> ApplicationSubmitted : final submit
+    ApplicationSubmitted --> SelfDisclosureIssued : type = EoA Self-Disclosure
+    ApplicationSubmitted --> ScrutinyScheduled : type routed via Table 2.3
+    ScrutinyScheduled --> ScrutinyCompleted
+    ScrutinyCompleted --> ReScrutinyScheduled : deficiencies raised
+    ReScrutinyScheduled --> ScrutinyCompleted
+    ScrutinyCompleted --> EvcScheduled : EVC required by Table 2.3
+    ScrutinyCompleted --> EcQueued : no EVC required
+    EvcScheduled --> EvcCompleted
+    EvcCompleted --> ShcQueued : deficiencies or SHC required
+    ShcQueued --> EcQueued : SHC recommendation
+    EcQueued --> LoaIssued : EC approves
+    EcQueued --> LodIssued : EC finds deficiencies
+    EcQueued --> LorIssued : EC rejects
+    LodIssued --> DraftApplication : institution complies within window
+    LorIssued --> SacAppealFiled : appeal within 7 days
+    LoaIssued --> SacAppealFiled : appeal within 7 days
+    SacAppealFiled --> SacHearing
+    SacHearing --> EcQueued : SAC recommends fresh SC/EVC
+    SacHearing --> LoaIssued : SAC recommends approval
+    SacHearing --> LorIssued : SAC concurs with rejection
+    LoaIssued --> SecurityDeposited : new institution, §1.12
+    SecurityDeposited --> [*]
+    LoaIssued --> [*]
+    LorIssued --> [*]
+    SelfDisclosureIssued --> [*]
+          </pre>
+          <div class="caption">
+            The only human-committee transitions are the ones with named
+            committees (SC, EVC, SHC, SAC, EC). Everything else is triggered
+            by the workflow runner or the institution.
+          </div>
+        </div>
+
+        <h3>Timelines the system enforces</h3>
+        <ul>
+          <li><strong>7-day appeal window</strong> after LoD/LoR issuance <span class="clause">§1.11a, §2.24a</span></li>
+          <li><strong>15 days</strong> to submit Affidavit 3 + Security Deposit after LoA intimation, else 10% / 20% penalty at 31 May / 31 July <span class="clause">§2.25f</span></li>
+          <li><strong>30 November</strong> deadline for student enrolment data upload <span class="clause">§2.25n</span></li>
+          <li><strong>10 April</strong> deadline to revoke a Closure application <span class="clause">§2.3.3g</span></li>
+          <li><strong>6 years</strong> maximum Break-in-EoA before institution must apply as new <span class="clause">§2.16.1a</span></li>
+          <li><strong>30 days</strong> Ombudsperson resolution window <span class="clause">§6.50f(iv)</span></li>
+          <li><strong>Public Notice</strong> cut-off dates per academic year for Category-1 applications <span class="clause">§2.22</span></li>
+        </ul>
+      </section>
+
+      <section id="norms">
+        <h2>8. APH norms in scope for v0</h2>
+        <p>
+          v0 encodes a representative slice of Chapter VI and Chapter I norms.
+          Every rule cites the clause it enforces. The full APH is roughly 200+
+          checkable norms; v0 targets the ones on the critical path for
+          Engineering &amp; Technology UG applications.
+        </p>
+        <table class="compact">
+          <thead>
+            <tr><th style="width: 26%">Norm</th><th>Rule</th><th style="width: 15%">Clause</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Faculty : Student ratio</td>
+              <td>By programme &amp; level, per Annexure-5. Adjunct/PoP capped at 15% (20% Design, 30% Planning).</td>
+              <td>§6.14, §6.14d</td>
+            </tr>
+            <tr>
+              <td>Auto intake reduction</td>
+              <td>If admissions &lt; 30% of Approved Intake for 5 consecutive years AND next year admission ≤ 50%, Council reduces intake by 50%.</td>
+              <td>§6.12a(i)</td>
+            </tr>
+            <tr>
+              <td>Built-up area</td>
+              <td>Instructional + Administrative + Amenities + Circulation per Annexure-3, per programme.</td>
+              <td>§6.17, §6.18</td>
+            </tr>
+            <tr>
+              <td>Land ownership / lease</td>
+              <td>Sale / Gift / Registered Lease (≥30 years) with live lease ≥ max programme duration.</td>
+              <td>§6.17a–b</td>
+            </tr>
+            <tr>
+              <td>Library, Computer, Software, Internet</td>
+              <td>Per Annexure-4; internet bandwidth in Mbps by intake.</td>
+              <td>§6.19</td>
+            </tr>
+            <tr>
+              <td>Land Use / Occupancy / Fire / Structural</td>
+              <td>Land Use Certificate, Occupancy Certificate / Completion Certificate / Building Licence / Form D, valid Fire Safety Certificate, Structural Stability Certificate if building &gt; 30 years (valid 5 years).</td>
+              <td>§6.17e–i</td>
+            </tr>
+            <tr>
+              <td>Principal / Director qualification</td>
+              <td>Must satisfy AICTE norms; missing &gt; 12 months triggers penal action.</td>
+              <td>§7.4b</td>
+            </tr>
+            <tr>
+              <td>Fund position (new institution)</td>
+              <td>FDR / bank account in Nationalised or RBI-scheduled bank, per Table 1.2 (Engineering ₹100 Lakh, others ₹50 Lakh).</td>
+              <td>§1.5.3, Table 1.2</td>
+            </tr>
+            <tr>
+              <td>TER Charges</td>
+              <td>Per Table 1.1 / Table 2.1; 10% annual increase; Govt / J&amp;K / NE / PwBD / women-only concessional.</td>
+              <td>§1.4.2, §2.3.2</td>
+            </tr>
+            <tr>
+              <td>Security Deposit</td>
+              <td>Per Table 1.4; <strong>doubled</strong> for private leased land / building.</td>
+              <td>§1.12, Table 1.4</td>
+            </tr>
+            <tr>
+              <td>Intake ceiling per Division</td>
+              <td>Per Table 1.3 (E&amp;T Diploma / UG: 60 or 30 per division; PG: 30, etc.).</td>
+              <td>§1.7, Table 1.3</td>
+            </tr>
+            <tr>
+              <td>Nil Deficiency gate</td>
+              <td>Many Chapter II categories require “Nil Deficiency based on Self-Disclosure” before EVC.</td>
+              <td>§1.7.2, §2.8a, §2.10c</td>
+            </tr>
+            <tr>
+              <td>Essential Requirements (committee-based)</td>
+              <td>Anti-Ragging Committee (§6.47), Internal Committee — Sexual Harassment (§6.48), SC/ST Committee (§6.49), SGRC + Ombudsperson (§6.50), IIC (§6.51). Registrations checked before EoA download.</td>
+              <td>§6.47–§6.53</td>
+            </tr>
+            <tr>
+              <td>Penal Action triggers</td>
+              <td>Excess admission (fine = 5× total fee per student × full course duration), no qualified Principal &gt; 12 months, faculty-ratio non-fulfilment &gt; 12 months, non-fulfilment of essential requirements, working from unapproved location.</td>
+              <td>§7.3, §7.4</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="architecture">
+        <h2>9. Architecture</h2>
+        <p>
+          One frontend, one backend, one database, four AI microservices.
+          Nothing else.
+        </p>
+        <div class="diagram">
+          <pre class="mermaid">
+graph LR
+    subgraph CLIENT["Client (Next.js)"]
+        INST[Institution Dashboard]
+        CMTE[Committee Console<br/>SC / EVC / SHC / SAC / EC]
+        CHAT[APH Chatbot]
+    end
+    subgraph BACKEND["Backend service (FastAPI)"]
+        API[HTTP + SSE API]
+        AUTH[AuthN + RBAC by committee role]
+        ROUTER[Type router<br/>Table 2.3 lookup]
+        WF[Workflow runner<br/>state machine]
+        RULES[APH rules engine<br/>Python, versioned]
+        DSC[DSC verifier]
+        TOOLS[Tool registry<br/>function calling]
+    end
+    subgraph DATA["Data plane"]
+        PG[(PostgreSQL 16<br/>+ pgvector)]
+        BLOB[(Object storage<br/>PDFs, EVC videos, photos)]
+    end
+    subgraph AI["AI microservices"]
+        OCR[OCR service<br/>PaddleOCR]
+        CV[CV service<br/>YOLOv8]
+        LLM[LLM<br/>Gemini in v0<br/>Ollama fallback]
+        EMB[Embeddings<br/>BGE-M3]
+    end
+
+    INST --> API
+    CMTE --> API
+    CHAT --> API
+    API --> AUTH
+    API --> ROUTER
+    ROUTER --> WF
+    WF --> RULES
+    WF --> TOOLS
+    API --> DSC
+    TOOLS --> PG
+    TOOLS --> BLOB
+    TOOLS -.-> OCR
+    TOOLS -.-> CV
+    TOOLS -.-> LLM
+    TOOLS -.-> EMB
+    RULES --> PG
+    LLM -.-> TOOLS
+          </pre>
+          <div class="caption">
+            Solid arrows: synchronous HTTP inside the app. Dotted arrows:
+            outbound calls to AI services. The LLM reaches data only through
+            registered tools.
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <h2>10. Data model</h2>
+        <p>Postgres 16 with <code>pgvector</code>. Names are informational.</p>
+        <table class="compact">
+          <thead>
+            <tr><th style="width: 26%">Table</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>institutions</code></td><td>Trust / Society / Company details, PID (per APH), promoter, minority status, autonomy status.</td></tr>
+            <tr><td><code>applications</code></td><td>One row per application. Columns include <code>chapter</code>, <code>type</code>, <code>state</code>, <code>programme</code>, <code>level</code>, <code>intake</code>, <code>ter_paid</code>, <code>dsc_ok</code>, <code>public_notice_id</code>. Domain payload in a <code>data</code> JSONB.</td></tr>
+            <tr><td><code>documents</code></td><td>Uploaded files with <code>storage_uri</code>, <code>sha256</code>, <code>doc_type</code>, <code>dsc_signer</code>, <code>dsc_valid</code>, <code>ocr_status</code>.</td></tr>
+            <tr><td><code>document_fields</code></td><td>Structured fields extracted from a document with per-field confidence and bounding boxes. PII fields stored masked.</td></tr>
+            <tr><td><code>aph_norms</code></td><td>Versioned rules table: <code>norm_key</code>, <code>chapter</code>, <code>clause</code>, <code>programme</code>, <code>level</code>, <code>parameters</code> JSONB, <code>effective_from</code>, <code>effective_to</code>.</td></tr>
+            <tr><td><code>compliance_checks</code></td><td>Every rule evaluation: <code>application_id</code>, <code>norm_key</code>, <code>passed</code>, <code>actual</code>, <code>required</code>, <code>clause</code>, <code>evaluated_at</code>, <code>evaluator</code> (<code>system</code> or user id).</td></tr>
+            <tr><td><code>deficiencies</code></td><td>Open items. Linked to a <code>compliance_check</code>. Status: open / addressed / withdrawn. Deadline per §1.11 window.</td></tr>
+            <tr><td><code>committees</code></td><td>Named committee bodies: SC, Re-SC, EVC, SHC, SAC, SCSC. Composition and quorum rules.</td></tr>
+            <tr><td><code>committee_members</code></td><td>Panel of eligible experts by domain, geography, reliability score, load. Feeds the automated selection.</td></tr>
+            <tr><td><code>committee_assignments</code></td><td>Result of automated selection. Stores assignment cost and constraints satisfied — auditable.</td></tr>
+            <tr><td><code>committee_reports</code></td><td>Outputs from SC / EVC / SHC / SAC. Structured findings + recommendation + attachments.</td></tr>
+            <tr><td><code>evc_video</code></td><td>Per §1.9f/g: YouTube URL + GPS coordinates + duration + frame index. CV findings link back here.</td></tr>
+            <tr><td><code>infra_findings</code></td><td>CV outputs per photo / video frame: detected class, count, confidence, timestamp, comparison to Annexure-3/4 requirement.</td></tr>
+            <tr><td><code>ec_decisions</code></td><td>Executive Committee decision: <code>outcome</code> (LoA / LoD / LoR), <code>speaking_order_uri</code>, <code>ec_meeting_id</code>, <code>ratified_by_council_on</code>, <code>overrode_recommendation: bool</code>, <code>override_reason</code>.</td></tr>
+            <tr><td><code>appeals</code></td><td>SAC appeals. Deadline enforced (7 days from LoD/LoR).</td></tr>
+            <tr><td><code>audit_log</code></td><td>Append-only. Every state transition, tool call, DSC verification, and committee action. Each row includes <code>prev_row_sha256</code> for tamper-evidence.</td></tr>
+            <tr><td><code>aph_chunks</code></td><td>APH handbook chunked for retrieval: <code>text</code>, <code>embedding vector(1024)</code>, <code>clause_ref</code>. HNSW index on <code>embedding</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="tech-stack">
+        <h2>11. Tech stack</h2>
+        <dl class="kv">
+          <dt>Frontend</dt>
+          <dd>Next.js 15 (App Router), React 19, Tailwind, shadcn/ui.</dd>
+          <dt>Realtime updates</dt>
+          <dd>Server-Sent Events from FastAPI. No WebSocket, no separate broker.</dd>
+          <dt>Backend</dt>
+          <dd>FastAPI on Python 3.12, SQLAlchemy 2, Alembic, Pydantic v2.</dd>
+          <dt>Workflow</dt>
+          <dd>Plain state machine in <code>workflow/runner.py</code>. LangGraph optional; a dict of transitions is enough for v0.</dd>
+          <dt>Database</dt>
+          <dd>PostgreSQL 16 with <code>pgvector</code>. Supabase for hosted demo, Docker Postgres for local dev.</dd>
+          <dt>Object storage</dt>
+          <dd>Supabase Storage or S3-compatible MinIO. PDFs, images, EVC videos.</dd>
+          <dt>OCR</dt>
+          <dd>PaddleOCR in a FastAPI microservice; English + Hindi. Tesseract as fallback for scanned text-only PDFs.</dd>
+          <dt>DSC verification</dt>
+          <dd>Python <code>pyHanko</code> for PDF signature validation against the emSigner / CCA India trust anchors used by AICTE.</dd>
+          <dt>LLM</dt>
+          <dd>Gemini 2.5 Flash via API for v0 (cheap, reliable, structured outputs). Ollama with a local 7–9B model as the offline fallback consistent with §6.14i sovereignty posture.</dd>
+          <dt>Embeddings</dt>
+          <dd>BGE-M3 (1024-dim, multilingual, open weights) in-process via <code>sentence-transformers</code>.</dd>
+          <dt>Computer vision</dt>
+          <dd>YOLOv8n / YOLOv8s microservice. COCO-pretrained in v0; fine-tuned classes in v1.</dd>
+          <dt>Auth</dt>
+          <dd>Session auth via <code>fastapi-users</code> or Supabase Auth. Roles: <code>institution</code>, <code>sc_member</code>, <code>evc_member</code>, <code>shc_member</code>, <code>sac_member</code>, <code>ec_member</code>, <code>regulation_bureau</code>, <code>pgrc</code>.</dd>
+          <dt>Deployment</dt>
+          <dd>Single Docker Compose: <code>web</code>, <code>api</code>, <code>db</code>, <code>ocr</code>, <code>cv</code>. Vercel for the frontend when judged remotely.</dd>
+        </dl>
+      </section>
+
+      <section id="rules-engine">
+        <h2>12. APH rules engine</h2>
+        <p>
+          A rule is a pure function that takes an application snapshot and the
+          norms in force at submission time, and returns a
+          <code>ComplianceCheck</code>. Rules are unit-tested against APH
+          worked examples.
+        </p>
+        <pre><code>class ComplianceCheck(BaseModel):
+    norm_key: str
+    clause: str
+    passed: bool
+    actual: float | int | str | None
+    required: float | int | str | None
+    reason: str
+
+def check_faculty_ratio(app: Application, norms: NormSet) -> ComplianceCheck:
+    """
+    APH 2024-27 §6.14 + Annexure-5.
+    §6.12a(i) auto-reduction applies if admissions &lt; 30% for 5 preceding years.
+    """
+    norm = norms.get("faculty_ratio", app.programme, app.level)
+    required = norm.parameters["students_per_faculty"]
+
+    faculty = app.data["regular_faculty_count"]
+    adjunct = app.data.get("adjunct_and_pop_count", 0)
+    cap = 0.15 if app.programme not in {"Design", "Planning"} else (
+        0.20 if app.programme == "Design" else 0.30
+    )
+    counted_adjunct = min(adjunct, math.floor(faculty * cap / (1 - cap)))
+    effective_faculty = faculty + counted_adjunct
+
+    students = app.data["sanctioned_intake"]
+    ratio = students / max(effective_faculty, 1)
+    return ComplianceCheck(
+        norm_key=norm.key,
+        clause=norm.clause,
+        passed=ratio &lt;= required,
+        actual=round(ratio, 2),
+        required=required,
+        reason=(
+            f"{students} intake / {faculty} regular + "
+            f"{counted_adjunct} counted adjunct = 1:{ratio:.1f}; "
+            f"required 1:{required} per Annexure-5"
+        ),
+    )</code></pre>
+        <p>
+          Adding a rule is a Python function + a row in <code>aph_norms</code>
+          + a unit test. There is no SPARQL, no OWL reasoner, no Jena.
+        </p>
+
+        <h3>What-if simulator (§2.6 hypotheticals)</h3>
+        <p>
+          The demo question — “what if we add 60 intake to UG Engineering?” —
+          reuses the same engine: clone the application, patch
+          <code>sanctioned_intake += 60</code>, re-run every rule, diff. This
+          also validates §2.6a: “increase in intake demanded shall be approved
+          in commensuration with equivalent infrastructure, facilities and
+          faculty.”
+        </p>
+      </section>
+
+      <section id="tools">
+        <h2>13. Tool registry</h2>
+        <table class="compact">
+          <thead>
+            <tr>
+              <th style="width: 30%">Tool</th>
+              <th>Purpose</th>
+              <th style="width: 12%">Kind</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>get_application(id)</code></td><td>Fetch application + current state.</td><td><span class="tag">read</span></td></tr>
+            <tr><td><code>verify_dsc(document_id)</code></td><td>Validate PDF Digital Signature against CCA India trust anchors per §1.4.3.</td><td><span class="tag">crypto</span></td></tr>
+            <tr><td><code>extract_document_fields(doc_id, schema)</code></td><td>OCR + LLM structured extraction against the schema for that <code>doc_type</code> (Annexure-1 / Annexure-2).</td><td><span class="tag">llm</span></td></tr>
+            <tr><td><code>run_compliance(app_id)</code></td><td>Execute every rule for the application’s <code>(chapter, type, programme, level)</code>. Persist <code>compliance_checks</code>.</td><td><span class="tag">rules</span></td></tr>
+            <tr><td><code>simulate(app_id, patch)</code></td><td>Re-run rules on a hypothetical patch. Return the diff. Backs the what-if UI and §2.6 self-service checks.</td><td><span class="tag">rules</span></td></tr>
+            <tr><td><code>generate_deficiency_report(app_id)</code></td><td>Structured report the portal already advertises (§2.3.3b, §1.7.2 “Nil Deficiency”). Adds clause citations and path-forward suggestions.</td><td><span class="tag">rules</span></td></tr>
+            <tr><td><code>assign_committee(app_id, kind)</code></td><td>Improve the “web-portal based automated selection” (§1.8a, §1.9a) for SC / EVC / SHC / SAC using Hungarian matching on complexity × reliability with CoI + geography + load constraints.</td><td><span class="tag">algo</span></td></tr>
+            <tr><td><code>analyse_evc_video(app_id)</code></td><td>Frame-sample the 30-min EVC video per §1.9f/g. Detect rooms, equipment, whiteboards, workstations, and read GPS overlay. Cross-check against Building Plan.</td><td><span class="tag">cv</span></td></tr>
+            <tr><td><code>analyse_infra_photos(doc_ids)</code></td><td>Same CV service on institution-uploaded photos.</td><td><span class="tag">cv</span></td></tr>
+            <tr><td><code>search_aph(query, k)</code></td><td>pgvector cosine search over <code>aph_chunks</code>. Returns text with <code>clause_ref</code>.</td><td><span class="tag">rag</span></td></tr>
+            <tr><td><code>draft_speaking_order(app_id)</code></td><td>Draft the formal Speaking Order per §1.10b / §2.25 from <code>compliance_checks</code> and <code>ec_decisions</code>. Officer edits and signs.</td><td><span class="tag">llm</span></td></tr>
+            <tr><td><code>check_extended_eoa_eligibility(institution_id)</code></td><td>Evaluate the six criteria in §2.1a (NIRF, QS Asia, NBA ≥30%, NAAC ≥3.01, autonomy, ≥80% admission for 5 years).</td><td><span class="tag">rules</span></td></tr>
+            <tr><td><code>faculty_double_listing_scan(faculty_id)</code></td><td>Cross-reference faculty across institutions using the mandated add/delete reports (§6.14c) and salary-payment cross-check (§6.14a).</td><td><span class="tag">rules</span></td></tr>
+            <tr><td><code>land_records_lookup(parcel_id)</code></td><td>Mocked adapter for State land records. Interface designed so a real API can replace the mock.</td><td><span class="tag warn">mock</span></td></tr>
+            <tr><td><code>fire_safety_lookup(cert_id)</code></td><td>Mock adapter for State fire-safety authority validation.</td><td><span class="tag warn">mock</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="llm-usage">
+        <h2>14. LLM usage — where and how</h2>
+        <p>The LLM does four jobs. It does not decide compliance.</p>
+        <table class="compact">
+          <thead>
+            <tr><th style="width: 26%">Job</th><th>Input</th><th>Output schema</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Structured extraction</td>
+              <td>OCR text + <code>doc_type</code> (e.g. Building Plan, Fire Safety Certificate, Bank Certificate)</td>
+              <td><code>ExtractedFields</code>: typed fields, per-field confidence, source-span pointer, PII masked.</td>
+            </tr>
+            <tr>
+              <td>Deficiency brief</td>
+              <td>Failed <code>compliance_checks</code> rows</td>
+              <td><code>DeficiencyBrief</code>: one paragraph per failure in plain language, each citing <code>clause</code>. Suggests up to three path-forwards (§2.6a-c style).</td>
+            </tr>
+            <tr>
+              <td>Speaking Order draft</td>
+              <td>Application + EC decision + citations</td>
+              <td><code>SpeakingOrderDraft</code>: header, background, clause-by-clause findings, precedents (from RAG), conclusion, appeal rights per §1.11.</td>
+            </tr>
+            <tr>
+              <td>APH chatbot (“AICTE digital assistant”, Ch. VIII item 13)</td>
+              <td>Question + top-<em>k</em> <code>aph_chunks</code> + optional rules result</td>
+              <td><code>AnswerWithCitations</code>: answer text + list of <code>clause_ref</code> objects.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout good">
+          <div class="label">Grounding rule</div>
+          Every factual claim in an LLM output must map to a tool result or an
+          <code>aph_chunk.clause_ref</code>. If it cannot, the schema forces
+          <code>answer="I cannot verify this against the APH."</code> The
+          frontend renders that verbatim.
+        </div>
+      </section>
+
+      <section id="cv-pipeline">
+        <h2>15. EVC video &amp; infrastructure CV</h2>
+        <p>
+          §1.9f/g of the APH already prescribes the artefact: for an online
+          EVC the institution produces a <strong>30-minute video</strong>
+          showing every infrastructural facility, uploaded to the Trust /
+          Society YouTube channel with the URL shared on the portal. For a
+          physical EVC, the institution records the entire proceedings with
+          the same requirements. The video must show:
+        </p>
+        <ul>
+          <li>Entry and exit of the committee with timestamps.</li>
+          <li>Building Plan signed by the Scrutiny Committee.</li>
+          <li>GPS coordinates at the entrance of main building, academic building, administrative building, and library.</li>
+          <li>Class rooms, tutorial rooms, laboratories, workshops, drawing hall, computer centre, library, reading room, seminar hall, principal’s room, board room, common facilities.</li>
+        </ul>
+        <p>This is exactly what the CV pipeline consumes:</p>
+        <ol>
+          <li>Ingest the YouTube URL, download the video to object storage.</li>
+          <li>Sample one frame per second and de-duplicate detections across frames.</li>
+          <li>Run YOLOv8 per frame; write per-frame <code>infra_findings</code>.</li>
+          <li>Read overlaid GPS text with an OCR pass; compare against the Land Use Certificate / Building Plan coordinates.</li>
+          <li>Aggregate counts (chairs, monitors, workstations, whiteboards) and compare against Annexure-3 / Annexure-4 requirements for the declared intake.</li>
+          <li>Anything below a confidence threshold is queued for the EVC member, not auto-decided.</li>
+        </ol>
+        <div class="callout warn">
+          <div class="label">Honest limits</div>
+          COCO-pretrained YOLO handles chairs, monitors, laptops, whiteboards
+          but not lathes, spectrometers, or subject-specific lab equipment.
+          v0 pilots the pipeline on classroom counts and generic equipment;
+          fine-tuning is a v1 task. Do not overclaim in the demo.
+        </div>
+      </section>
+
+      <section id="assignment">
+        <h2>16. Committee assignment</h2>
+        <p>
+          §1.8a and §1.9a already say SC and EVC members are chosen via a
+          “web-portal based automated selection process.” Our layer replaces
+          uniform random with constrained optimisation, keeping the process
+          auditable.
+        </p>
+
+        <h4>Application complexity score</h4>
+        <ul>
+          <li>Number of approval categories in the same submission (§2.7c allows multiple).</li>
+          <li>New institution vs Extension vs Increase-in-Intake vs Merger.</li>
+          <li>Documents count &amp; Annexure-1/2 completeness.</li>
+          <li>Prior deficiencies in the last 3 years.</li>
+          <li>Pending court cases (§1.11, §2.24).</li>
+          <li>Existing penal actions under Chapter VII.</li>
+          <li>Complaints on file with PGRC / SCSC.</li>
+        </ul>
+
+        <h4>Member reliability score</h4>
+        <ul>
+          <li>Past committee report quality (peer-reviewed by SHC).</li>
+          <li>Post-EVC outcomes (did the institution later fail? penalty).</li>
+          <li>Years of experience (capped at 20).</li>
+          <li>Domain expertise match (matches programme).</li>
+          <li>Historical throughput without incident.</li>
+          <li>Geographic proximity (for physical EVCs).</li>
+        </ul>
+
+        <h4>Constraints (hard)</h4>
+        <ul>
+          <li>Conflict of interest: no member from the same institution / trust; state-level exclusion per AICTE convention.</li>
+          <li>Load balancing: no member gets more than <em>N</em> EVCs per month.</li>
+          <li>Quorum: composition matches the committee’s statutory make-up.</li>
+        </ul>
+
+        <p>
+          Assignment: <code>scipy.optimize.linear_sum_assignment</code>
+          (Hungarian) on a cost matrix built from complexity × reliability with
+          the CoI and load constraints applied as forbidden edges. The chosen
+          assignment and its cost are persisted in
+          <code>committee_assignments</code> for audit.
+        </p>
+
+        <div class="callout warn">
+          <div class="label">Bias-mitigation</div>
+          Reliability weights are objective, versioned, and displayed to the
+          member. Members can appeal their score via the same PGRC/Ombudsperson
+          flow §6.50 already prescribes for institutions.
+        </div>
+      </section>
+
+      <section id="security">
+        <h2>17. Security, PII, DSC</h2>
+        <ul>
+          <li>
+            <strong>PII masking at the OCR boundary.</strong> Aadhaar, PAN,
+            phone, email replaced with stable salted hashes; salaries bucketed.
+            The LLM never sees raw §6.14i / §6.14a data.
+          </li>
+          <li>
+            <strong>DSC enforcement.</strong> §1.4.3 and §2.3.4 make DSC
+            mandatory. <code>verify_dsc()</code> runs at ingest; unsigned or
+            invalid signatures are refused before entering the workflow.
+          </li>
+          <li>
+            <strong>Structured LLM outputs.</strong> Every LLM call uses
+            <code>response_format</code> (Gemini) or an
+            <code>instructor</code>-wrapped Pydantic schema. Free-form output
+            on a required field is a validation error, not a soft warning.
+          </li>
+          <li>
+            <strong>Prompt-injection defence.</strong> OCR text is scanned for
+            known instruction-shaped patterns before being sent to the LLM.
+            Imperfect on its own; the real defence is that the LLM cannot
+            approve or reject anything — only the EC can (§1.10a).
+          </li>
+          <li>
+            <strong>Row-level access.</strong> Institution scoped to its own
+            <code>institution_id</code>. Committee members scoped to their
+            assigned applications. Officer roles scoped by region.
+          </li>
+          <li>
+            <strong>Transport.</strong> HTTPS only. Documents served via short
+            TTL signed URLs from object storage.
+          </li>
+          <li>
+            <strong>DPDP posture.</strong> Prototype demonstrates masking and
+            consent capture. Production would need a DPO, retention policy,
+            and a formal data-processing agreement with any hosted LLM
+            vendor. Not claimed in v0.
+          </li>
+        </ul>
+      </section>
+
+      <section id="audit">
+        <h2>18. Audit, appeal &amp; override</h2>
+        <p>
+          <code>audit_log</code> is the accountability substrate.
+        </p>
+        <ul>
+          <li>Every state transition writes one row: <code>{ts, actor, from_state, to_state, application_id, payload_sha256}</code>.</li>
+          <li>Every tool invocation writes one row: <code>{ts, actor, tool_name, args_hash, result_hash, duration_ms}</code>.</li>
+          <li>Every DSC verification writes one row: <code>{ts, document_id, signer_cn, chain_ok, revocation_checked_at}</code>.</li>
+          <li>Every EC decision writes one row: <code>{ts, ec_meeting_id, application_id, outcome, matched_recommendation: bool, override_reason?}</code>.</li>
+          <li>Every SAC appeal writes one row: <code>{ts, application_id, filed_within_window: bool, sac_recommendation, council_ratified_on}</code>.</li>
+          <li>Rows are append-only; each includes <code>prev_row_sha256</code> for tamper-evidence.</li>
+        </ul>
+        <div class="callout good">
+          <div class="label">This replaces "blockchain anchor"</div>
+          A Postgres hash chain, exported nightly to append-only object
+          storage, gives the tamper-evidence property §7.13 wants. No public
+          chain, no wallet, no foreign dependency. Consistent with the §6.14i
+          data-sovereignty posture.
+        </div>
+      </section>
+
+      <section id="delivery">
+        <h2>19. Delivery plan</h2>
+
+        <h3>v0 — Hackathon prototype</h3>
+        <ul>
+          <li>
+            <strong>One vertical:</strong> Chapter II §2.5 <em>EoA based on
+            Self-Disclosure</em> + Chapter II §2.6 <em>Increase in Intake /
+            Additional Course(s)</em>, both for Engineering &amp; Technology UG.
+          </li>
+          <li>DSC verification for uploaded PDFs (Annexure-2 subset).</li>
+          <li>Rules engine covering ~15 clauses across §6.12, §6.14, §6.17, §6.19, §7.4, plus Table 1.3 / Table 1.4.</li>
+          <li>Committee assignment for SC and EVC on a mock panel of ~20 members with CoI + load constraints.</li>
+          <li>EVC video ingest + CV analysis for classroom / workstation counts and GPS overlay reading.</li>
+          <li>Committee consoles for SC and EVC with structured report entry that populates <code>committee_reports</code>.</li>
+          <li>EC console: recommendation view, override with reason, generate + edit + sign speaking order.</li>
+          <li>Institution dashboard: state, deficiencies with clause citations, deadlines, appeal button.</li>
+          <li>What-if simulator on the same rules engine.</li>
+          <li>APH chatbot with citations (Chapter VIII item 13).</li>
+        </ul>
+
+        <h3>v1 — Post-hackathon (2–3 months)</h3>
+        <ul>
+          <li>All Chapter II categories (17), Chapter I (New Institution), Chapter III (Twinning).</li>
+          <li>SHC and SAC consoles wired to the appeal flow.</li>
+          <li>Fine-tuned CV weights for AICTE-specific equipment classes.</li>
+          <li>Swap Gemini for a locally hosted 8–13B model via Ollama / vLLM to satisfy the §6.14i sovereignty posture.</li>
+          <li>Faculty double-listing detection across institutions using mandated §6.14c reports.</li>
+          <li>Officer analytics: throughput per committee, override rate, common deficiencies, EVC anomaly frequency.</li>
+          <li>Public verification endpoint: institution status by AISHE / PID code (no blockchain).</li>
+        </ul>
+
+        <h3>v2 — Only if there is a mandate</h3>
+        <ul>
+          <li>Chapter IV (Universities) and Chapter V (ODL/OL) applied through the same router.</li>
+          <li>Adapters to State NOC, University, UGC, NBA, NAAC (real integrations, not mocks).</li>
+          <li>Multilingual chatbot (Hindi + Tamil first — not “all 22 languages”).</li>
+          <li>Continuous compliance via institution ERP webhooks — opt-in, per-institution.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

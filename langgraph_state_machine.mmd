@@ -1,0 +1,42 @@
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor': '#1B6B7A',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#0D3A42',
+  'lineColor': '#B0BEC5',
+  'textColor': '#FFFFFF',
+  'fontSize': '15px',
+  'edgeLabelBackground':'#0F1A26'
+}}}%%
+stateDiagram-v2
+    direction LR
+    [*] --> ApplicationSubmitted
+    ApplicationSubmitted --> DocumentVerifier
+    DocumentVerifier --> DeficiencyNotice : verification fails
+    DocumentVerifier --> ComplianceChecker : success
+    ComplianceChecker --> DeficiencyList : non-compliant
+    ComplianceChecker --> FraudDetector : compliant or fixable
+    FraudDetector --> ManualReview : high risk
+    FraudDetector --> SensorDeploy : needs dimension tracking
+    FraudDetector --> EVCVideoAnalyst : low risk
+    SensorDeploy --> EVCVideoAnalyst : 30-day data collected
+    EVCVideoAnalyst --> PhysicalEVC : anomalies detected
+    EVCVideoAnalyst --> ResourceAllocator : clean or verified
+    ResourceAllocator --> FinalRecommendation : evaluators assigned
+    FinalRecommendation --> HumanOfficerReview
+    HumanOfficerReview --> OverrideLogged : officer overrides
+    HumanOfficerReview --> DecisionAnchored : officer accepts
+    OverrideLogged --> EventEmitted
+    DecisionAnchored --> EventEmitted
+    EventEmitted --> [*]
+    DeficiencyNotice --> [*]
+    DeficiencyList --> [*]
+    ManualReview --> [*]
+    PhysicalEVC --> [*]
+
+    classDef terminal fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+    classDef review fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef normal fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
+
+    class DeficiencyNotice,DeficiencyList,ManualReview,PhysicalEVC terminal
+    class HumanOfficerReview,FinalRecommendation review
+    class ApplicationSubmitted,DocumentVerifier,ComplianceChecker,FraudDetector,SensorDeploy,EVCVideoAnalyst,ResourceAllocator,OverrideLogged,DecisionAnchored,EventEmitted normal
