@@ -8,7 +8,7 @@
   'edgeLabelBackground':'#0F1A26'
 }}}%%
 stateDiagram-v2
-    direction LR
+    direction TB
     [*] --> ApplicationSubmitted
     ApplicationSubmitted --> DocumentVerifier
     DocumentVerifier --> DeficiencyNotice : verification fails
@@ -16,18 +16,19 @@ stateDiagram-v2
     ComplianceChecker --> DeficiencyList : non-compliant
     ComplianceChecker --> FraudDetector : compliant or fixable
     FraudDetector --> ManualReview : high risk
-    FraudDetector --> SensorDeploy : needs dimension tracking
-    FraudDetector --> EVCVideoAnalyst : low risk
-    SensorDeploy --> EVCVideoAnalyst : 30-day data collected
-    EVCVideoAnalyst --> PhysicalEVC : anomalies detected
-    EVCVideoAnalyst --> ResourceAllocator : clean or verified
+    FraudDetector --> ARMeasure : needs dimension tracking
+    FraudDetector --> EVCReview : low risk
+    ARMeasure --> EVCReview : ARCore lengths stored
+    EVCReview --> PhysicalEVC : anomalies detected
+    EVCReview --> ResourceAllocator : clean or verified
     ResourceAllocator --> FinalRecommendation : evaluators assigned
     FinalRecommendation --> HumanOfficerReview
     HumanOfficerReview --> OverrideLogged : officer overrides
     HumanOfficerReview --> DecisionAnchored : officer accepts
     OverrideLogged --> EventEmitted
     DecisionAnchored --> EventEmitted
-    EventEmitted --> [*]
+    EventEmitted --> BlockchainAnchor : hash the step
+    BlockchainAnchor --> [*]
     DeficiencyNotice --> [*]
     DeficiencyList --> [*]
     ManualReview --> [*]
@@ -39,4 +40,4 @@ stateDiagram-v2
 
     class DeficiencyNotice,DeficiencyList,ManualReview,PhysicalEVC terminal
     class HumanOfficerReview,FinalRecommendation review
-    class ApplicationSubmitted,DocumentVerifier,ComplianceChecker,FraudDetector,SensorDeploy,EVCVideoAnalyst,ResourceAllocator,OverrideLogged,DecisionAnchored,EventEmitted normal
+    class ApplicationSubmitted,DocumentVerifier,ComplianceChecker,FraudDetector,ARMeasure,EVCReview,ResourceAllocator,OverrideLogged,DecisionAnchored,EventEmitted,BlockchainAnchor normal

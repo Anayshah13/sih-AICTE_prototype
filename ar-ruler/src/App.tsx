@@ -85,7 +85,8 @@ export default function App() {
       >
         <ArOverlay
           ui={ui}
-          onMeasureAgain={() => sessionRef.current?.measureAgain()}
+          onUndo={() => sessionRef.current?.undo()}
+          onDeleteLine={(id) => sessionRef.current?.deleteLine(id)}
           onExit={() => {
             void sessionRef.current?.end();
           }}

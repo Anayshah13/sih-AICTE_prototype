@@ -8,66 +8,59 @@
   'clusterBkg': '#0F1A26',
   'clusterBorder': '#4A5D6E',
   'edgeLabelBackground':'#0F1A26'
-}}}%%
-graph LR
-    subgraph EDGE["Edge"]
-        USER[Users<br/>Institution + Officer]
-        CF[CloudFront<br/>+ WAF]
-    end
-    subgraph AWS_MUMBAI["AWS Mumbai - Primary"]
-        API[API Gateway<br/>+ Cognito]
-        NEXT[Next.js SSR<br/>ECS Fargate]
-        ORCH[Orchestrator<br/>FastAPI ECS]
-        AGENTS[6 Agent Services<br/>ECS Fargate]
-        KAFKA[Kafka - MSK<br/>6 topics]
-        S3[S3 Documents]
-        PGV[pgvector]
-        REDIS[Redis Cache]
-        ES[Elasticsearch<br/>Dashboard]
-        RDS[RDS PostgreSQL<br/>non-PII]
-        READ[Read Model Builder]
-        NOTIFY[Notification Svc]
-    end
-    subgraph ONPREM["On-Prem - AICTE Delhi"]
-        PG_PII[PostgreSQL<br/>PII encrypted]
-        VLLM[vLLM 4× A100<br/>Qwen + Gemma + BGE]
-        JENA[Jena Fuseki<br/>APH KG]
-        TSDB[TimescaleDB<br/>Sensor]
-    end
-    subgraph AWS_DELHI["AWS Delhi - DR"]
-        DR[Hot Standby]
+}, 'flowchart': {'htmlLabels': true, 'curve': 'linear', 'padding': 16, 'nodeSpacing': 28, 'rankSpacing': 56}}}%%
+flowchart LR
+    subgraph USERS["Users"]
+        INST[Institution]
+        CMTE["Committees<br/>SC · EVC · EC"]
     end
 
-    USER --> CF
-    CF --> API
-    API --> NEXT
-    API --> ORCH
-    ORCH --> AGENTS
-    AGENTS --> KAFKA
-    KAFKA --> READ
-    READ --> ES
-    KAFKA --> NOTIFY
-    AGENTS -.->|internal API| VLLM
-    AGENTS -.->|SPARQL| JENA
-    AGENTS -.->|queries| PG_PII
-    AGENTS -.->|queries| TSDB
-    AGENTS --> S3
-    AGENTS --> PGV
-    AGENTS --> REDIS
-    ONPREM -.->|Direct Connect| AWS_MUMBAI
-    AWS_MUMBAI -.->|Replication| AWS_DELHI
+    subgraph PORTAL["Portal"]
+        WEB["Dashboards<br/>(Next.js)"]
+        WF["Workflow<br/>(FastAPI)"]
+        RULES["APH rules<br/>(Python)"]
+        MATCH["Evaluator matching<br/>(algorithm)"]
+    end
 
-    classDef edgeNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
-    classDef mumbaiNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
-    classDef onpremNode fill:#233043,color:#FFFFFF,stroke:#7FA3C0,stroke-width:1.5px
-    classDef drNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+    subgraph SENSE["Sensing / AI"]
+        AR["AR ruler<br/>(ARCore / WebXR)"]
+        OCR["OCR<br/>(PaddleOCR)"]
+        LLM["LLM<br/>(extract + explain)"]
+    end
 
-    class USER,CF edgeNode
-    class API,NEXT,ORCH,AGENTS,KAFKA,S3,PGV,REDIS,ES,RDS,READ,NOTIFY mumbaiNode
-    class PG_PII,VLLM,JENA,TSDB onpremNode
-    class DR drNode
+    subgraph DATA["Data"]
+        DB[(Postgres)]
+        FILES["Files<br/>(object storage)"]
+        CHAIN["Blockchain<br/>(hash of each step)"]
+    end
 
-    style EDGE fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
-    style AWS_MUMBAI fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
-    style ONPREM fill:#162235,color:#FFFFFF,stroke:#4A5D6E,stroke-width:2px
-    style AWS_DELHI fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:2px
+    INST --> WEB
+    CMTE --> WEB
+    INST --> AR
+    CMTE --> AR
+    WEB --> WF
+    WF --> RULES
+    WF --> MATCH
+    AR --> WF
+    WF --> OCR
+    WF --> LLM
+    WF --> DB
+    WF --> FILES
+    DB --> CHAIN
+
+    classDef userNode fill:#1A2E45,color:#FFFFFF,stroke:#8FB3D9,stroke-width:1.5px
+    classDef appNode fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:1.5px
+    classDef senseNode fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:1.5px
+    classDef dataNode fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:1.5px
+    classDef chainNode fill:#3A2030,color:#FFFFFF,stroke:#8A5468,stroke-width:1.5px
+
+    class INST,CMTE userNode
+    class WEB,WF,RULES,MATCH appNode
+    class AR,OCR,LLM senseNode
+    class DB,FILES dataNode
+    class CHAIN chainNode
+
+    style USERS fill:#0F1A26,color:#FFFFFF,stroke:#8FB3D9,stroke-width:2px
+    style PORTAL fill:#1B6B7A,color:#FFFFFF,stroke:#0D3A42,stroke-width:2px
+    style SENSE fill:#1A3A3A,color:#FFFFFF,stroke:#4FA88A,stroke-width:2px
+    style DATA fill:#1E4550,color:#FFFFFF,stroke:#4FA8BD,stroke-width:2px

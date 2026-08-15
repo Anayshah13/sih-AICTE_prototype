@@ -258,12 +258,16 @@ button {
 }
 
 .ghost,
-.again {
+.again,
+.chip-x,
+.toolbar button {
   pointer-events: none;
 }
 
 #ar-overlay[data-active="true"] .ghost,
-#ar-overlay[data-active="true"] .again {
+#ar-overlay[data-active="true"] .again,
+#ar-overlay[data-active="true"] .chip-x,
+#ar-overlay[data-active="true"] .toolbar button {
   pointer-events: auto;
 }
 
@@ -305,11 +309,67 @@ button {
 .overlay-bottom {
   flex-direction: column;
   text-align: center;
+  gap: 10px;
+}
+
+.stats {
+  pointer-events: none;
+  font-family: var(--display);
+  font-size: 18px;
+  color: var(--laser);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+.stats strong {
+  font-weight: 700;
+}
+
+.line-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-height: 22dvh;
+  overflow: auto;
+}
+
+.line-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 10px;
+  background: rgba(9, 11, 8, 0.62);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  pointer-events: auto;
+}
+
+.chip-x {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.toolbar .ghost:disabled {
+  opacity: 0.35;
 }
 
 .coach {
-  font-size: 15px;
-  max-width: 18rem;
+  font-size: 14px;
+  max-width: 20rem;
 }
 
 .distance {
