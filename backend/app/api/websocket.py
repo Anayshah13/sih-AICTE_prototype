@@ -10,7 +10,7 @@ from app.services.point_cloud import PointCloudGenerator
 from app.services.room_measurement import room_measurement_service
 from app.services.ruler_measurement import ruler_measurement_service
 from app.services.aicte_checker import aicte_checker
-from app.models.schemas import FrameProcessingResponse
+from app.models.schemas import FrameProcessingResponse, MeasuredDimensions
 
 logger = logging.getLogger(__name__)
 
@@ -71,29 +71,31 @@ async def websocket_video_endpoint(websocket: WebSocket):
                 dimensions = None
                 compliance_result = None
 
-                if mode == "ruler":
-                    # Perform 15 cm reference ruler measurement
-                    ruler_result = ruler_measurement_service.measure_ruler(
-                        rgb_image=rgb_image,
-                        depth_map=depth_map,
-                        expected_cm=expected_cm,
-                        points=points,
-                        fx=fx,
-                        fy=fy
-                    )
-                else:
-                    # Perform room 3D geometry plane measurement
-                    if depth_map is not None:
-                        pc_generator = PointCloudGenerator(fx=fx, fy=fy)
-                        pcd = pc_generator.generate_point_cloud(rgb_image, depth_map, stride=3)
-                        dimensions = room_measurement_service.estimate_room_dimensions(pcd)
-                    else:
-                        dimensions = room_measurement_service.estimate_room_dimensions(
-                            PointCloudGenerator().generate_point_cloud(rgb_image, np.ones((rgb_image.shape[0], rgb_image.shape[1]), dtype=np.float32) * 2.0)
-                        )
-                        dimensions.notes.append("Depth model warming up.")
+                # 1. Compute 3D Object Dimension Measurement
+                ruler_result = ruler_measurement_service.measure_ruler(
+                    rgb_image=rgb_image,
+                    depth_map=depth_map,
+                    expected_cm=expected_cm,
+                    points=points,
+                    fx=fx,
+                    fy=fy
+                )
 
-                    compliance_result = aicte_checker.check_compliance(dimensions, room_key=room_type)
+                # 2. Compute Live Room Spatial Geometry (Length, Width, Height, Area)
+                if depth_map is not None:
+                    pc_generator = PointCloudGenerator(fx=fx, fy=fy)
+                    pcd = pc_generator.generate_point_cloud(rgb_image, depth_map, stride=3)
+                    dimensions = room_measurement_service.estimate_room_dimensions(pcd)
+                else:
+                    dimensions = MeasuredDimensions(
+                        length_m=None,
+                        width_m=None,
+                        height_m=None,
+                        area_sqm=None,
+                        confidence=0.0,
+                        reliable=False,
+                        notes=["Depth model warming up; scan the room with camera."]
+                    )
 
                 processing_time = round((time.time() - start_time) * 1000, 2)
 

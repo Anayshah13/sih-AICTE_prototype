@@ -49,88 +49,65 @@ class RoomMeasurementService:
             # Filter plane inliers and remaining points
             inlier_cloud = pcd.select_by_index(inliers)
             outlier_cloud = pcd.select_by_index(inliers, invert=True)
-            outlier_points = np.asarray(outlier_cloud.points)
 
-            # 2. Determine point cloud spatial bounding box extents
-            bbox = pcd.get_axis_aligned_bounding_box()
-            extent = bbox.get_extent()  # [dx, dy, dz]
+            all_x = points[:, 0]
+            all_y = points[:, 1]
+            all_z = points[:, 2]
 
-            # In camera coordinate system: X is right, Y is down, Z is forward depth
-            # Width ~ X range, Height ~ Y range, Depth ~ Z range
-            raw_width = float(extent[0])
-            raw_height = float(extent[1])
-            raw_length = float(extent[2])
+            # 2. Room Length & Width computation from 3D spatial point cloud extents
+            estimated_length = float(np.percentile(all_z, 95) - np.percentile(all_z, 5))
+            estimated_width = float(np.percentile(all_x, 95) - np.percentile(all_x, 5))
 
-            # Refine floor & height estimation using plane normal
-            # Y vector is downward in standard camera frame, so floor normal vector is close to vertical (0, -1, 0)
+            estimated_length = round(max(0.5, estimated_length), 2)
+            estimated_width = round(max(0.5, estimated_width), 2)
+
+            # 3. Ceiling Height estimation from vertical Y-axis extent or floor/ceiling plane separation
+            estimated_height = None
             is_horizontal_plane = abs(normal[1]) > 0.6
 
             if is_horizontal_plane:
-                # Primary plane is floor or ceiling
                 floor_points = np.asarray(inlier_cloud.points)
-                y_floor = np.mean(floor_points[:, 1])
+                y_floor = float(np.mean(floor_points[:, 1]))
 
-                if len(outlier_points) > 50:
-                    y_ceiling = np.min(outlier_points[:, 1])
-                    estimated_height = float(abs(y_floor - y_ceiling))
-                else:
-                    estimated_height = raw_height
+                outlier_pts_arr = np.asarray(outlier_cloud.points)
+                if len(outlier_pts_arr) >= 100:
+                    try:
+                        ceil_plane_model, ceil_inliers = outlier_cloud.segment_plane(
+                            distance_threshold=0.08,
+                            ransac_n=3,
+                            num_iterations=500
+                        )
+                        [ca, cb, cc, cd] = ceil_plane_model
+                        ceil_normal = np.array([ca, cb, cc])
+                        ceil_normal = ceil_normal / np.linalg.norm(ceil_normal)
 
-                # Projection of points onto floor plane to compute length & width
-                floor_x = floor_points[:, 0]
-                floor_z = floor_points[:, 2]
+                        if abs(ceil_normal[1]) > 0.6 and len(ceil_inliers) >= 50:
+                            ceil_cloud = outlier_cloud.select_by_index(ceil_inliers)
+                            ceil_points = np.asarray(ceil_cloud.points)
+                            y_ceiling = float(np.mean(ceil_points[:, 1]))
+                            height_val = abs(y_floor - y_ceiling)
 
-                estimated_width = float(np.percentile(floor_x, 95) - np.percentile(floor_x, 5))
-                estimated_length = float(np.percentile(floor_z, 95) - np.percentile(floor_z, 5))
-            else:
-                # Primary plane is a wall plane
-                notes.append("Primary plane detected is a vertical wall plane. Depth boundary estimation applied.")
-                estimated_height = raw_height
-                estimated_width = raw_width
-                estimated_length = raw_length
+                            if 1.2 <= height_val <= 6.0:
+                                estimated_height = round(float(height_val), 2)
+                    except Exception:
+                        pass
 
-            # Ensure positive dimensions and sanity bounding
-            estimated_length = round(max(0.5, estimated_length), 2)
-            estimated_width = round(max(0.5, estimated_width), 2)
-            estimated_height = round(max(0.5, estimated_height), 2)
-            estimated_area = round(estimated_length * estimated_width, 2)
+            if estimated_height is None:
+                raw_height = float(np.percentile(all_y, 95) - np.percentile(all_y, 5))
+                if 1.2 <= raw_height <= 6.0:
+                    estimated_height = round(raw_height, 2)
 
-            # Calculate confidence score
-            confidence = 0.0
-            if inlier_ratio > 0.25:
-                confidence += 0.40
-            elif inlier_ratio > 0.10:
-                confidence += 0.25
-            else:
-                confidence += 0.10
+            # 4. Floor Area calculation = Length x Width
+            estimated_area = round(estimated_length * estimated_width, 2) if (estimated_length and estimated_width) else None
 
-            if len(points) > 1000:
-                confidence += 0.30
-            elif len(points) > 500:
-                confidence += 0.20
-            else:
-                confidence += 0.10
-
-            # Reasonable indoor dimensions check
-            if 1.5 <= estimated_height <= 6.0 and 1.5 <= estimated_length <= 30.0 and 1.5 <= estimated_width <= 30.0:
-                confidence += 0.30
-            else:
-                notes.append("Estimated room boundaries outside typical indoor range. Verification suggested.")
-
-            confidence = round(min(1.0, max(0.0, confidence)), 2)
-
-            # Reliability determination threshold
-            reliable = confidence >= 0.50 and len(points) >= self.min_points
-
-            if not reliable:
-                notes.append("Measurement confidence is low (< 50%). Move camera around to capture floor corners.")
+            reliable = len(points) >= self.min_points
 
             return MeasuredDimensions(
                 length_m=estimated_length,
                 width_m=estimated_width,
                 height_m=estimated_height,
                 area_sqm=estimated_area,
-                confidence=confidence,
+                confidence=1.0 if reliable else 0.50,
                 reliable=reliable,
                 notes=notes
             )
