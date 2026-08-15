@@ -33,8 +33,12 @@ class MeasuredDimensions(BaseModel):
     width_m: Optional[float] = None
     height_m: Optional[float] = None
     area_sqm: Optional[float] = None
-    confidence: float = Field(..., description="Confidence score from 0.0 to 1.0")
-    reliable: bool = Field(..., description="True if geometry detection was confident and reliable")
+    room_length: Optional[float] = None
+    room_width: Optional[float] = None
+    ceiling_height: Optional[float] = None
+    floor_area: Optional[float] = None
+    confidence: float = Field(default=1.0, description="Confidence score from 0.0 to 1.0")
+    reliable: bool = Field(default=True, description="True if geometry detection was confident and reliable")
     notes: List[str] = Field(default_factory=list)
 
 class RulerMeasurementResult(BaseModel):

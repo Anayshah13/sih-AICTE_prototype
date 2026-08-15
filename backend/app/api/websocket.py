@@ -86,15 +86,21 @@ async def websocket_video_endpoint(websocket: WebSocket):
                     pc_generator = PointCloudGenerator(fx=fx, fy=fy)
                     pcd = pc_generator.generate_point_cloud(rgb_image, depth_map, stride=3)
                     dimensions = room_measurement_service.estimate_room_dimensions(pcd)
+                    if dimensions:
+                        logger.info(f"ROOM MEASUREMENT: length={dimensions.length_m}, width={dimensions.width_m}, height={dimensions.height_m}, area={dimensions.area_sqm}")
                 else:
                     dimensions = MeasuredDimensions(
                         length_m=None,
                         width_m=None,
                         height_m=None,
                         area_sqm=None,
+                        room_length=None,
+                        room_width=None,
+                        ceiling_height=None,
+                        floor_area=None,
                         confidence=0.0,
                         reliable=False,
-                        notes=["Depth model warming up; scan the room with camera."]
+                        notes=["Depth AI model initializing... Point camera around room space."]
                     )
 
                 processing_time = round((time.time() - start_time) * 1000, 2)

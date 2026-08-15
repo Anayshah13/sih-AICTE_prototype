@@ -107,6 +107,10 @@ class RoomMeasurementService:
                 width_m=estimated_width,
                 height_m=estimated_height,
                 area_sqm=estimated_area,
+                room_length=estimated_length,
+                room_width=estimated_width,
+                ceiling_height=estimated_height,
+                floor_area=estimated_area,
                 confidence=1.0 if reliable else 0.50,
                 reliable=reliable,
                 notes=notes

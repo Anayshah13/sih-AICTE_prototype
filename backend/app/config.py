@@ -10,7 +10,7 @@ class Settings:
     # Options: 
     # - depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf
     # - depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf
-    MODEL_ID: str = os.getenv("DEPTH_MODEL_ID", "depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf")
+    MODEL_ID: str = os.getenv("DEPTH_MODEL_ID", "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf")
     MODEL_FALLBACK_ID: str = "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf"
     
     # Processing settings

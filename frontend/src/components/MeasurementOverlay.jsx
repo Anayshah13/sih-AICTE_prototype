@@ -2,7 +2,12 @@ import React from 'react';
 import { Ruler } from 'lucide-react';
 
 export default function MeasurementOverlay({ dimensions, processingTimeMs }) {
-  const { length_m, width_m, height_m, area_sqm, notes } = dimensions || {};
+  const { notes } = dimensions || {};
+
+  const roomLength = dimensions?.room_length ?? dimensions?.length_m;
+  const roomWidth = dimensions?.room_width ?? dimensions?.width_m;
+  const ceilingHeight = dimensions?.ceiling_height ?? dimensions?.height_m;
+  const floorArea = dimensions?.floor_area ?? dimensions?.area_sqm;
 
   return (
     <div className="glass-card rounded-2xl p-4 border border-slate-800 flex flex-col justify-between h-full shadow-xl">
@@ -25,7 +30,7 @@ export default function MeasurementOverlay({ dimensions, processingTimeMs }) {
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Room Length</span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-xl font-extrabold text-cyan-300 font-mono">
-              {length_m !== null && length_m !== undefined ? length_m.toFixed(2) : '--'}
+              {roomLength !== null && roomLength !== undefined ? roomLength.toFixed(2) : '--'}
             </span>
             <span className="text-xs font-semibold text-slate-400">m</span>
           </div>
@@ -36,7 +41,7 @@ export default function MeasurementOverlay({ dimensions, processingTimeMs }) {
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Room Width</span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-xl font-extrabold text-cyan-300 font-mono">
-              {width_m !== null && width_m !== undefined ? width_m.toFixed(2) : '--'}
+              {roomWidth !== null && roomWidth !== undefined ? roomWidth.toFixed(2) : '--'}
             </span>
             <span className="text-xs font-semibold text-slate-400">m</span>
           </div>
@@ -47,7 +52,7 @@ export default function MeasurementOverlay({ dimensions, processingTimeMs }) {
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Ceiling Height</span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-xl font-extrabold text-cyan-300 font-mono">
-              {height_m !== null && height_m !== undefined ? height_m.toFixed(2) : '--'}
+              {ceilingHeight !== null && ceilingHeight !== undefined ? ceilingHeight.toFixed(2) : '--'}
             </span>
             <span className="text-xs font-semibold text-slate-400">m</span>
           </div>
@@ -58,7 +63,7 @@ export default function MeasurementOverlay({ dimensions, processingTimeMs }) {
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Floor Area</span>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-xl font-extrabold text-emerald-400 font-mono">
-              {area_sqm !== null && area_sqm !== undefined ? area_sqm.toFixed(2) : '--'}
+              {floorArea !== null && floorArea !== undefined ? floorArea.toFixed(2) : '--'}
             </span>
             <span className="text-xs font-semibold text-slate-400">m²</span>
           </div>

@@ -79,7 +79,7 @@ export default function Dashboard() {
           'classroom',
           500,
           500,
-          'ruler',
+          'room',
           15.0,
           points
         );
@@ -89,18 +89,22 @@ export default function Dashboard() {
   );
 
   // Derive measurements for Live Room Measurements overlay
-  const roomLength = latestDimensions?.length_m ?? (rulerData?.measured_cm ? rulerData.measured_cm / 100.0 : null);
-  const roomWidth = latestDimensions?.width_m ?? null;
-  const ceilingHeight = latestDimensions?.height_m ?? null;
+  const roomLength = latestDimensions?.room_length ?? latestDimensions?.length_m ?? (rulerData?.measured_cm ? rulerData.measured_cm / 100.0 : null);
+  const roomWidth = latestDimensions?.room_width ?? latestDimensions?.width_m ?? null;
+  const ceilingHeight = latestDimensions?.ceiling_height ?? latestDimensions?.height_m ?? null;
   const floorArea = (roomLength !== null && roomLength !== undefined && roomWidth !== null && roomWidth !== undefined)
     ? Number((roomLength * roomWidth).toFixed(2))
-    : (latestDimensions?.area_sqm ?? null);
+    : (latestDimensions?.floor_area ?? latestDimensions?.area_sqm ?? null);
 
   const roomDimensions = {
     length_m: roomLength,
     width_m: roomWidth,
     height_m: ceilingHeight,
     area_sqm: floorArea,
+    room_length: roomLength,
+    room_width: roomWidth,
+    ceiling_height: ceilingHeight,
+    floor_area: floorArea,
     notes: latestDimensions?.notes ?? rulerData?.notes ?? []
   };
 
