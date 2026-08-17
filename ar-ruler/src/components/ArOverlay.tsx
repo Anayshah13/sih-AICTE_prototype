@@ -4,19 +4,48 @@ type ArOverlayProps = {
   ui: ArUiState;
   onUndo: () => void;
   onDeleteLine: (id: number) => void;
+  onToggleArea: (visible: boolean) => void;
   onExit: () => void;
 };
 
-export function ArOverlay({ ui, onUndo, onDeleteLine, onExit }: ArOverlayProps) {
+export function ArOverlay({
+  ui,
+  onUndo,
+  onDeleteLine,
+  onToggleArea,
+  onExit,
+}: ArOverlayProps) {
   const canUndo = ui.pending || ui.lines.length > 0;
+  const areaReady = Boolean(ui.areaLabel);
 
   return (
     <div className="overlay">
-      <header className="overlay-top">
-        <p>{ui.headline}</p>
-        <button type="button" className="ghost" onClick={onExit}>
-          Close
-        </button>
+      <header className="overlay-chrome">
+        <div className="overlay-top">
+          <button type="button" className="ghost" onClick={onExit}>
+            Close
+          </button>
+          <p>{ui.headline}</p>
+          <button
+            type="button"
+            className={`area-btn${ui.areaVisible ? " on" : ""}`}
+            disabled={!areaReady}
+            aria-pressed={ui.areaVisible}
+            onClick={() => onToggleArea(!ui.areaVisible)}
+          >
+            <span className={`area-dot${areaReady ? " ready" : ""}`} aria-hidden="true" />
+            Area
+          </button>
+        </div>
+        {ui.areaVisible && ui.areaLabel && (
+          <aside className="area-panel">
+            <strong>{ui.areaLabel}</strong>
+            <span>
+              {ui.cornerCount} corners
+              {ui.heightLabel ? ` · ${ui.heightLabel}` : ""}
+            </span>
+          </aside>
+        )}
       </header>
 
       <div className="tap-surface">
@@ -27,18 +56,7 @@ export function ArOverlay({ ui, onUndo, onDeleteLine, onExit }: ArOverlayProps) 
       </div>
 
       <footer className="overlay-bottom">
-        {(ui.areaLabel || ui.roomLocked) && (
-          <div className="stats">
-            {ui.roomLocked ? (
-              <strong>
-                {ui.cornerCount} corners · {ui.areaLabel}
-                {ui.heightLabel ? ` · ${ui.heightLabel}` : ""}
-              </strong>
-            ) : (
-              <strong>{ui.areaLabel ?? "Mapping room…"}</strong>
-            )}
-          </div>
-        )}
+        {ui.previewLabel && <p className="distance">{ui.previewLabel}</p>}
 
         {ui.lines.length > 0 && (
           <ul className="line-list">
@@ -76,9 +94,8 @@ function LineChip({
 }) {
   return (
     <li className="line-chip">
-      <span>
-        L{index} · {line.label}
-      </span>
+      <span className="line-index">L{index}</span>
+      <span className="line-len">{line.label}</span>
       <button type="button" className="chip-x" aria-label={`Delete line ${index}`} onClick={onDelete}>
         ×
       </button>

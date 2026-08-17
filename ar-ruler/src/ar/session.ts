@@ -11,6 +11,7 @@ import {
   createLineVisual,
   createScene,
   disposeScene,
+  layoutPreviewTape,
   placeFromMatrix,
   removeLineVisual,
   updateRoomVisual,
@@ -32,6 +33,7 @@ export type SessionCallbacks = {
 export type ArRulerHandle = {
   undo: () => void;
   deleteLine: (id: number) => void;
+  setAreaVisible: (visible: boolean) => void;
   end: () => Promise<void>;
 };
 
@@ -43,12 +45,14 @@ type LineRecord = LineSummary & {
 type InternalState = {
   phase: MeasurePhase;
   pending: THREE.Vector3 | null;
+  previewLabel: string | null;
   lines: LineRecord[];
   consecutiveHits: number;
   hitValid: boolean;
   tracking: boolean;
   room: RoomEstimate | null;
   roomLocked: boolean;
+  areaVisible: boolean;
 };
 
 let lineSeq = 1;
@@ -109,12 +113,14 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
   const internal: InternalState = {
     phase: "scanning",
     pending: null,
+    previewLabel: null,
     lines: [],
     consecutiveHits: 0,
     hitValid: false,
     tracking: true,
     room: null,
     roomLocked: false,
+    areaVisible: false,
   };
 
   const samples: PlaneSample[] = [];
@@ -138,6 +144,8 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
   const tapMatrix = new THREE.Matrix4();
   const samplePos = new THREE.Vector3();
   const sampleNrm = new THREE.Vector3();
+  const hitPos = new THREE.Vector3();
+  let lastPreviewEmit = 0;
 
   const emit = (): void => {
     callbacks.onUi(uiFromInternal(internal));
@@ -186,7 +194,9 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     objects.lines.add(visual.group);
     internal.lines.push({ id, label, meters, a: a.clone(), b: b.clone() });
     internal.pending = null;
+    internal.previewLabel = null;
     objects.pending.visible = false;
+    objects.preview.group.visible = false;
   };
 
   const placeAtMatrix = (matrix: THREE.Matrix4): void => {
@@ -288,11 +298,12 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
         internal.roomLocked && estimate.hasCeiling,
       );
     }
+    objects.room.visible = internal.areaVisible && estimate.areaM2 >= 2;
 
     return (
       wasLocked !== internal.roomLocked ||
       Math.abs(estimate.areaM2 - prevArea) > 0.2 ||
-      (prevArea === 0 && estimate.areaM2 >= 2)
+      (prevArea < 2 && estimate.areaM2 >= 2)
     );
   };
 
@@ -349,6 +360,7 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     if (hitPose) {
       objects.reticle.visible = true;
       objects.reticle.matrix.fromArray(hitPose.transform.matrix);
+      hitPos.setFromMatrixPosition(objects.reticle.matrix);
       internal.consecutiveHits += 1;
       if (!internal.hitValid) {
         internal.hitValid = true;
@@ -358,6 +370,31 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
       if (internal.phase === "scanning" && internal.consecutiveHits >= READY_HIT_FRAMES) {
         internal.phase = "measuring";
         dirty = true;
+      }
+
+      if (internal.pending) {
+        layoutPreviewTape(objects.preview, internal.pending, hitPos);
+        const now = typeof performance !== "undefined" ? performance.now() : 0;
+        if (now - lastPreviewEmit > 120) {
+          lastPreviewEmit = now;
+          internal.previewLabel = formatDistance(
+            worldDistanceMeters(
+              internal.pending.x,
+              internal.pending.y,
+              internal.pending.z,
+              hitPos.x,
+              hitPos.y,
+              hitPos.z,
+            ),
+          );
+          dirty = true;
+        }
+      } else if (objects.preview.group.visible) {
+        objects.preview.group.visible = false;
+        if (internal.previewLabel) {
+          internal.previewLabel = null;
+          dirty = true;
+        }
       }
 
       sampleTick += 1;
@@ -372,9 +409,14 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
       }
     } else {
       objects.reticle.visible = false;
+      objects.preview.group.visible = false;
       internal.consecutiveHits = 0;
       if (internal.hitValid) {
         internal.hitValid = false;
+        dirty = true;
+      }
+      if (internal.previewLabel) {
+        internal.previewLabel = null;
         dirty = true;
       }
     }
@@ -407,7 +449,9 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     undo: () => {
       if (internal.pending) {
         internal.pending = null;
+        internal.previewLabel = null;
         objects.pending.visible = false;
+        objects.preview.group.visible = false;
         emit();
         return;
       }
@@ -420,9 +464,12 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     deleteLine: (id: number) => {
       internal.lines = internal.lines.filter((line) => line.id !== id);
       removeLineVisual(objects.lines, id);
-      if (internal.pending) {
-        /* keep pending point */
-      }
+      emit();
+    },
+    setAreaVisible: (visible: boolean) => {
+      const ready = Boolean(internal.room && internal.room.areaM2 >= 2);
+      internal.areaVisible = visible && ready;
+      objects.room.visible = internal.areaVisible;
       emit();
     },
     end: async () => {
@@ -479,16 +526,19 @@ async function pickReferenceSpaceType(session: XRSession): Promise<XRReferenceSp
 
 function uiFromInternal(internal: InternalState): ArUiState {
   const room = internal.room;
+  const areaReady = Boolean(room && room.areaM2 >= 2);
   const base: ArUiState = {
     ...INITIAL_UI,
     phase: internal.phase,
     pending: Boolean(internal.pending),
+    previewLabel: internal.pending ? internal.previewLabel : null,
     lines: internal.lines.map(({ id, label, meters }) => ({ id, label, meters })),
     hitValid: internal.hitValid,
     tracking: internal.tracking,
     roomLocked: internal.roomLocked,
+    areaVisible: internal.areaVisible && areaReady,
     cornerCount: room ? (internal.roomLocked && room.hasCeiling ? 8 : 4) : 0,
-    areaLabel: room && room.areaM2 >= 2 ? formatArea(room.areaM2) : null,
+    areaLabel: areaReady && room ? formatArea(room.areaM2) : null,
     heightLabel: room && room.hasCeiling ? formatDistance(room.heightM) : null,
   };
 
@@ -505,7 +555,7 @@ function uiFromInternal(internal: InternalState): ArUiState {
     return {
       ...base,
       headline: "Move your phone to scan",
-      instruction: "Sweep floor, walls, and ceiling. Corners appear when the room is mapped.",
+      instruction: "Sweep the floor until the reticle locks, then tap two points.",
     };
   }
 
@@ -513,22 +563,14 @@ function uiFromInternal(internal: InternalState): ArUiState {
     return {
       ...base,
       headline: "Tap the other end",
-      instruction: "Drop the second point. Previous lines stay.",
-    };
-  }
-
-  if (internal.roomLocked) {
-    return {
-      ...base,
-      headline: "Room corners locked",
-      instruction: "Keep adding tape lines, or delete one. Sweep more to refine.",
+      instruction: "Stretch the tape to the second point.",
     };
   }
 
   return {
     ...base,
     headline: "Tap to measure",
-    instruction: "Tap two points for a line. Look into corners so the 8 room points can lock.",
+    instruction: "Tap two points for a tape line.",
   };
 }
 

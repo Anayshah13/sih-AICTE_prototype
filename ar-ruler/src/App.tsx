@@ -87,6 +87,7 @@ export default function App() {
           ui={ui}
           onUndo={() => sessionRef.current?.undo()}
           onDeleteLine={(id) => sessionRef.current?.deleteLine(id)}
+          onToggleArea={(visible) => sessionRef.current?.setAreaVisible(visible)}
           onExit={() => {
             void sessionRef.current?.end();
           }}

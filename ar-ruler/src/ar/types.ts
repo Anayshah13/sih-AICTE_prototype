@@ -11,11 +11,13 @@ export type ArUiState = {
   headline: string;
   instruction: string;
   pending: boolean;
+  previewLabel: string | null;
   lines: LineSummary[];
   areaLabel: string | null;
   heightLabel: string | null;
   cornerCount: number;
   roomLocked: boolean;
+  areaVisible: boolean;
   hitValid: boolean;
   tracking: boolean;
   error: string | null;
@@ -24,13 +26,15 @@ export type ArUiState = {
 export const INITIAL_UI: ArUiState = {
   phase: "scanning",
   headline: "Move your phone to scan",
-  instruction: "Sweep the room. Tape lines stay. Corners lock when the scan is confident.",
+  instruction: "Sweep the room, then tap two points for a tape line.",
   pending: false,
+  previewLabel: null,
   lines: [],
   areaLabel: null,
   heightLabel: null,
   cornerCount: 0,
   roomLocked: false,
+  areaVisible: false,
   hitValid: false,
   tracking: true,
   error: null,
