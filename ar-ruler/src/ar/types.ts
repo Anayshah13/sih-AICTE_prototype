@@ -11,7 +11,6 @@ export type ArUiState = {
   headline: string;
   instruction: string;
   pending: boolean;
-  previewLabel: string | null;
   lines: LineSummary[];
   areaLabel: string | null;
   heightLabel: string | null;
@@ -19,6 +18,7 @@ export type ArUiState = {
   roomLocked: boolean;
   areaVisible: boolean;
   hitValid: boolean;
+  canPlace: boolean;
   tracking: boolean;
   error: string | null;
 };
@@ -26,9 +26,8 @@ export type ArUiState = {
 export const INITIAL_UI: ArUiState = {
   phase: "scanning",
   headline: "Move your phone to scan",
-  instruction: "Sweep the room, then tap two points for a tape line.",
+  instruction: "Aim the reticle, then press +.",
   pending: false,
-  previewLabel: null,
   lines: [],
   areaLabel: null,
   heightLabel: null,
@@ -36,6 +35,7 @@ export const INITIAL_UI: ArUiState = {
   roomLocked: false,
   areaVisible: false,
   hitValid: false,
+  canPlace: false,
   tracking: true,
   error: null,
 };

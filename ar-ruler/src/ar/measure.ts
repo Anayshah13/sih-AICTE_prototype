@@ -25,8 +25,7 @@ export function formatDistance(meters: number): string {
   const centimeters = meters * 100;
 
   if (centimeters < 100) {
-    const rounded = Math.round(centimeters);
-    return `${rounded} cm`;
+    return `${centimeters.toFixed(2)} cm`;
   }
 
   return `${meters.toFixed(2)} m`;

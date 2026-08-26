@@ -86,7 +86,13 @@ export default function App() {
         <ArOverlay
           ui={ui}
           onUndo={() => sessionRef.current?.undo()}
-          onDeleteLine={(id) => sessionRef.current?.deleteLine(id)}
+          onClear={() => sessionRef.current?.clearAll()}
+          onPlace={() => {
+            sessionRef.current?.placePoint();
+          }}
+          onScreenshot={async () => {
+            await sessionRef.current?.captureScreenshot();
+          }}
           onToggleArea={(visible) => sessionRef.current?.setAreaVisible(visible)}
           onExit={() => {
             void sessionRef.current?.end();

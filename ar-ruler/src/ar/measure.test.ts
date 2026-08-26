@@ -11,8 +11,9 @@ describe("worldDistanceMeters", () => {
 });
 
 describe("formatDistance", () => {
-  it("uses centimeters below 100 cm", () => {
-    expect(formatDistance(0.42)).toBe("42 cm");
+  it("uses centimeters below 100 cm with two decimal places", () => {
+    expect(formatDistance(0.42)).toBe("42.00 cm");
+    expect(formatDistance(0.2134)).toBe("21.34 cm");
   });
 
   it("uses meters at 100 cm and above", () => {

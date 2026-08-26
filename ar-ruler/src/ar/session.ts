@@ -11,13 +11,13 @@ import {
   createLineVisual,
   createScene,
   disposeScene,
-  layoutPreviewTape,
   placeFromMatrix,
   removeLineVisual,
   updateRoomVisual,
 } from "./scene";
 import type { ArUiState, LineSummary, MeasurePhase } from "./types";
 import { INITIAL_UI } from "./types";
+import { captureXrPng, placeHaptic, shareOrDownloadPng, shotHaptic } from "./capture";
 import { mapXrError } from "./webxr";
 
 const READY_HIT_FRAMES = 8;
@@ -33,6 +33,9 @@ export type SessionCallbacks = {
 export type ArRulerHandle = {
   undo: () => void;
   deleteLine: (id: number) => void;
+  clearAll: () => void;
+  placePoint: () => boolean;
+  captureScreenshot: () => Promise<void>;
   setAreaVisible: (visible: boolean) => void;
   end: () => Promise<void>;
 };
@@ -45,7 +48,6 @@ type LineRecord = LineSummary & {
 type InternalState = {
   phase: MeasurePhase;
   pending: THREE.Vector3 | null;
-  previewLabel: string | null;
   lines: LineRecord[];
   consecutiveHits: number;
   hitValid: boolean;
@@ -68,11 +70,12 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     antialias: false,
     alpha: true,
     powerPreference: "high-performance",
+    preserveDrawingBuffer: true,
   });
   renderer.setPixelRatio(1);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
-  renderer.xr.setFramebufferScaleFactor(0.65);
+  renderer.xr.setFramebufferScaleFactor(0.75);
   renderer.domElement.className = "ar-canvas";
   document.body.appendChild(renderer.domElement);
 
@@ -113,7 +116,6 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
   const internal: InternalState = {
     phase: "scanning",
     pending: null,
-    previewLabel: null,
     lines: [],
     consecutiveHits: 0,
     hitValid: false,
@@ -131,21 +133,11 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
   let lastRoomKey = "";
 
   let hitTestSource: XRHitTestSource | null = null;
-  let transientSource: XRTransientInputHitTestSource | null = null;
   let ended = false;
-  let placedThisTouch = false;
 
-  const planeOrigin = new THREE.Vector3();
-  const planeNormal = new THREE.Vector3();
-  const plane = new THREE.Plane();
-  const ndc = new THREE.Vector2();
-  const raycaster = new THREE.Raycaster();
-  const tapPoint = new THREE.Vector3();
-  const tapMatrix = new THREE.Matrix4();
   const samplePos = new THREE.Vector3();
   const sampleNrm = new THREE.Vector3();
-  const hitPos = new THREE.Vector3();
-  let lastPreviewEmit = 0;
+  const reticleMatrix = new THREE.Matrix4();
 
   const emit = (): void => {
     callbacks.onUi(uiFromInternal(internal));
@@ -167,14 +159,6 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     throw new Error(mapXrError(error));
   }
 
-  try {
-    transientSource =
-      (await session.requestHitTestSourceForTransientInput?.({ profile: "generic-touchscreen" })) ??
-      null;
-  } catch {
-    transientSource = null;
-  }
-
   const canPlace = (): boolean =>
     !ended && internal.tracking && internal.hitValid && internal.phase === "measuring";
 
@@ -194,9 +178,7 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     objects.lines.add(visual.group);
     internal.lines.push({ id, label, meters, a: a.clone(), b: b.clone() });
     internal.pending = null;
-    internal.previewLabel = null;
     objects.pending.visible = false;
-    objects.preview.group.visible = false;
   };
 
   const placeAtMatrix = (matrix: THREE.Matrix4): void => {
@@ -206,58 +188,22 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     const point = new THREE.Vector3().setFromMatrixPosition(matrix);
     if (!internal.pending) {
       internal.pending = placeFromMatrix(objects.pending, matrix);
+      placeHaptic();
       emit();
       return;
     }
     commitLine(point);
+    placeHaptic();
     emit();
   };
 
-  const placeFromScreen = (clientX: number, clientY: number): boolean => {
+  const placeAtReticle = (): boolean => {
     if (!canPlace() || !objects.reticle.visible) {
       return false;
     }
-
-    planeOrigin.setFromMatrixPosition(objects.reticle.matrix);
-    planeNormal.setFromMatrixColumn(objects.reticle.matrix, 1).normalize();
-    if (planeNormal.lengthSq() < 1e-8) {
-      planeNormal.set(0, 1, 0);
-    }
-    plane.setFromNormalAndCoplanarPoint(planeNormal, planeOrigin);
-
-    ndc.set((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
-    const xrCamera = renderer.xr.getCamera();
-    const subCam = xrCamera.cameras[0] ?? xrCamera;
-    raycaster.setFromCamera(ndc, subCam);
-    const hit = raycaster.ray.intersectPlane(plane, tapPoint);
-    if (!hit) {
-      return false;
-    }
-
-    tapMatrix.copy(objects.reticle.matrix);
-    tapMatrix.setPosition(tapPoint);
-    placeAtMatrix(tapMatrix);
+    placeAtMatrix(reticleMatrix);
     return true;
   };
-
-  const onPointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0) {
-      return;
-    }
-    const target = event.target;
-    if (target instanceof HTMLElement && target.closest("button")) {
-      return;
-    }
-    if (placedThisTouch) {
-      return;
-    }
-    if (placeFromScreen(event.clientX, event.clientY)) {
-      placedThisTouch = true;
-    }
-  };
-
-  const tapSurface = callbacks.overlayRoot.querySelector(".tap-surface");
-  tapSurface?.addEventListener("pointerdown", onPointerDown as EventListener);
 
   const ingestSample = (x: number, y: number, z: number, nx: number, ny: number, nz: number): void => {
     const key = cellKey(x, y, z);
@@ -324,9 +270,6 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     ended = true;
     hitTestSource?.cancel();
     hitTestSource = null;
-    transientSource?.cancel();
-    transientSource = null;
-    tapSurface?.removeEventListener("pointerdown", onPointerDown as EventListener);
     window.removeEventListener("resize", onResize);
     renderer.setAnimationLoop(null);
     callbacks.overlayRoot.dataset.active = "false";
@@ -360,7 +303,7 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     if (hitPose) {
       objects.reticle.visible = true;
       objects.reticle.matrix.fromArray(hitPose.transform.matrix);
-      hitPos.setFromMatrixPosition(objects.reticle.matrix);
+      reticleMatrix.fromArray(hitPose.transform.matrix);
       internal.consecutiveHits += 1;
       if (!internal.hitValid) {
         internal.hitValid = true;
@@ -370,31 +313,6 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
       if (internal.phase === "scanning" && internal.consecutiveHits >= READY_HIT_FRAMES) {
         internal.phase = "measuring";
         dirty = true;
-      }
-
-      if (internal.pending) {
-        layoutPreviewTape(objects.preview, internal.pending, hitPos);
-        const now = typeof performance !== "undefined" ? performance.now() : 0;
-        if (now - lastPreviewEmit > 120) {
-          lastPreviewEmit = now;
-          internal.previewLabel = formatDistance(
-            worldDistanceMeters(
-              internal.pending.x,
-              internal.pending.y,
-              internal.pending.z,
-              hitPos.x,
-              hitPos.y,
-              hitPos.z,
-            ),
-          );
-          dirty = true;
-        }
-      } else if (objects.preview.group.visible) {
-        objects.preview.group.visible = false;
-        if (internal.previewLabel) {
-          internal.previewLabel = null;
-          dirty = true;
-        }
       }
 
       sampleTick += 1;
@@ -409,32 +327,10 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
       }
     } else {
       objects.reticle.visible = false;
-      objects.preview.group.visible = false;
       internal.consecutiveHits = 0;
       if (internal.hitValid) {
         internal.hitValid = false;
         dirty = true;
-      }
-      if (internal.previewLabel) {
-        internal.previewLabel = null;
-        dirty = true;
-      }
-    }
-
-    if (transientSource && canPlace()) {
-      const touches = frame.getHitTestResultsForTransientInput(transientSource);
-      const touch = touches[0];
-      if (touch && touch.results.length > 0) {
-        if (!placedThisTouch) {
-          const touchPose = touch.results[0].getPose(referenceSpace);
-          if (touchPose) {
-            placedThisTouch = true;
-            tapMatrix.fromArray(touchPose.transform.matrix);
-            placeAtMatrix(tapMatrix);
-          }
-        }
-      } else {
-        placedThisTouch = false;
       }
     }
 
@@ -449,9 +345,7 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
     undo: () => {
       if (internal.pending) {
         internal.pending = null;
-        internal.previewLabel = null;
         objects.pending.visible = false;
-        objects.preview.group.visible = false;
         emit();
         return;
       }
@@ -465,6 +359,23 @@ export async function startArSession(callbacks: SessionCallbacks): Promise<ArRul
       internal.lines = internal.lines.filter((line) => line.id !== id);
       removeLineVisual(objects.lines, id);
       emit();
+    },
+    clearAll: () => {
+      internal.pending = null;
+      objects.pending.visible = false;
+      internal.lines = [];
+      while (objects.lines.children.length) {
+        const child = objects.lines.children[0];
+        removeLineVisual(objects.lines, child.userData.id as number);
+      }
+      emit();
+    },
+    placePoint: () => placeAtReticle(),
+    captureScreenshot: async () => {
+      shotHaptic();
+      const blob = await captureXrPng(renderer);
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      await shareOrDownloadPng(blob, `ar-ruler-${stamp}.png`);
     },
     setAreaVisible: (visible: boolean) => {
       const ready = Boolean(internal.room && internal.room.areaM2 >= 2);
@@ -531,9 +442,9 @@ function uiFromInternal(internal: InternalState): ArUiState {
     ...INITIAL_UI,
     phase: internal.phase,
     pending: Boolean(internal.pending),
-    previewLabel: internal.pending ? internal.previewLabel : null,
     lines: internal.lines.map(({ id, label, meters }) => ({ id, label, meters })),
     hitValid: internal.hitValid,
+    canPlace: internal.phase === "measuring" && internal.hitValid && internal.tracking,
     tracking: internal.tracking,
     roomLocked: internal.roomLocked,
     areaVisible: internal.areaVisible && areaReady,
@@ -555,22 +466,22 @@ function uiFromInternal(internal: InternalState): ArUiState {
     return {
       ...base,
       headline: "Move your phone to scan",
-      instruction: "Sweep the floor until the reticle locks, then tap two points.",
+      instruction: "Move slowly until the reticle locks, then press +.",
     };
   }
 
   if (internal.pending) {
     return {
       ...base,
-      headline: "Tap the other end",
-      instruction: "Stretch the tape to the second point.",
+      headline: "Aim the other end",
+      instruction: "Line up the reticle, then press +.",
     };
   }
 
   return {
     ...base,
-    headline: "Tap to measure",
-    instruction: "Tap two points for a tape line.",
+    headline: "Measure",
+    instruction: "Aim the reticle, then press +.",
   };
 }
 
